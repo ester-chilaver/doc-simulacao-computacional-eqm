@@ -1,5 +1,5 @@
 /* ══════════════════════════════════════════
-   HOME.JS — Tunnel Animation & Homepage
+   HOME.JS — Central Light Animation
    Neurociência Computacional
    ══════════════════════════════════════════ */
 
@@ -9,9 +9,13 @@
   const ctx = canvas.getContext('2d');
 
   let W, H, cx, cy;
-  let time = 0;
-  const RINGS = 20;
-  const SPEED = 0.0035;
+  let phase = 0;
+
+  // Ciclo completo: ~18 segundos a 60fps
+  // 0.00 → 0.83: luz cresce (ease-in, bem devagar)
+  // 0.83 → 1.00: fade out suave, reinicia
+  const SPEED = 1 / 1080;
+  const GROW_END = 0.83;
 
   function resize() {
     const dpr = window.devicePixelRatio || 1;
@@ -27,82 +31,69 @@
   function draw() {
     ctx.clearRect(0, 0, W, H);
 
-    // Deep background
-    ctx.fillStyle = '#040203';
+    // Fundo escuro
+    ctx.fillStyle = '#020101';
     ctx.fillRect(0, 0, W, H);
 
-    // Perspective tunnel lines (walls converging to vanishing point)
-    const wallPoints = [
-      [0, 0], [W, 0], [W, H], [0, H],
-      [W * 0.5, 0], [W * 0.5, H], [0, H * 0.5], [W, H * 0.5],
-      [W * 0.25, 0], [W * 0.75, 0], [W * 0.25, H], [W * 0.75, H],
-      [0, H * 0.25], [0, H * 0.75], [W, H * 0.25], [W, H * 0.75],
-    ];
-    ctx.strokeStyle = 'rgba(245, 140, 20, 0.03)';
-    ctx.lineWidth = 0.5;
-    wallPoints.forEach(function (pt) {
-      ctx.beginPath();
-      ctx.moveTo(pt[0], pt[1]);
-      ctx.lineTo(cx, cy);
-      ctx.stroke();
-    });
+    const base = Math.min(W, H);
 
-    // Animated tunnel rings flowing toward center
-    for (let i = 0; i < RINGS; i++) {
-      // Phase: 0 = at center (just disappeared), 1 = at outer edge (just appeared)
-      let phase = ((i / RINGS) + time) % 1;
+    // Calcular crescimento e opacidade
+    let grow, alpha;
 
-      // Exponential easing for perspective — rings accelerate toward center
-      const t = Math.pow(phase, 1.6);
-
-      const rx = W * 0.54 * t;
-      const ry = H * 0.52 * t;
-
-      if (rx < 1) continue;
-
-      // Opacity: visible in mid-range, fade near center and fade at far edge
-      const fade = Math.sin(phase * Math.PI);
-      const opacity = fade * 0.28;
-
-      ctx.beginPath();
-      ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(245, 155, 25, ' + opacity + ')';
-      ctx.lineWidth = Math.max(0.4, (1 - t) * 1.8);
-      ctx.stroke();
+    if (phase <= GROW_END) {
+      // Ease-in acentuado: começa quase imperceptível, cresce gradualmente
+      grow = Math.pow(phase / GROW_END, 2.4);
+      alpha = 1;
+    } else {
+      grow = 1;
+      // Fade out suave ao final do ciclo
+      alpha = 1 - (phase - GROW_END) / (1 - GROW_END);
+      alpha = Math.max(0, alpha);
     }
 
-    // Vignette — darkens the edges
-    const vigR = Math.max(W, H) * 0.75;
-    const vignette = ctx.createRadialGradient(cx, cy, H * 0.08, cx, cy, vigR);
-    vignette.addColorStop(0, 'rgba(0,0,0,0)');
-    vignette.addColorStop(0.45, 'rgba(4,2,3,0.05)');
-    vignette.addColorStop(1, 'rgba(4,2,3,0.94)');
+    // ── Halo externo difuso (aurora ao redor da luz) ──
+    const haloR = base * grow * 0.72;
+    if (haloR > 0) {
+      const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, haloR);
+      halo.addColorStop(0,   `rgba(200, 140, 40,  ${0.07 * alpha})`);
+      halo.addColorStop(0.35, `rgba(180, 110, 25, ${0.04 * alpha})`);
+      halo.addColorStop(1,   'rgba(0,0,0,0)');
+      ctx.fillStyle = halo;
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // ── Glow quente intermediário ──
+    const glowR = base * (0.012 + grow * 0.28);
+    const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+    glow.addColorStop(0,    `rgba(255, 235, 150, ${0.65 * alpha})`);
+    glow.addColorStop(0.18, `rgba(252, 200,  70, ${0.30 * alpha})`);
+    glow.addColorStop(0.55, `rgba(240, 155,  35, ${0.08 * alpha})`);
+    glow.addColorStop(1,    'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, W, H);
+
+    // ── Núcleo branco central ──
+    const coreR = base * (0.006 + grow * 0.08);
+    const core = ctx.createRadialGradient(cx, cy, 0, cx, cy, coreR);
+    core.addColorStop(0,    `rgba(255, 254, 250, ${alpha})`);
+    core.addColorStop(0.25, `rgba(255, 248, 215, ${0.88 * alpha})`);
+    core.addColorStop(0.65, `rgba(255, 220, 110, ${0.38 * alpha})`);
+    core.addColorStop(1,    'rgba(0,0,0,0)');
+    ctx.fillStyle = core;
+    ctx.fillRect(0, 0, W, H);
+
+    // ── Vignette: escurece as bordas, deixa o centro respirar ──
+    const vigR = Math.max(W, H) * 0.82;
+    const vignette = ctx.createRadialGradient(cx, cy, base * 0.04, cx, cy, vigR);
+    vignette.addColorStop(0,    'rgba(0,0,0,0)');
+    vignette.addColorStop(0.42, 'rgba(2,1,1,0.25)');
+    vignette.addColorStop(1,    'rgba(2,1,1,0.97)');
     ctx.fillStyle = vignette;
     ctx.fillRect(0, 0, W, H);
 
-    // Central light source — the "light at the end"
-    const pulse = 1 + Math.sin(time * Math.PI * 6) * 0.025;
-    const lightR = Math.min(W, H) * 0.2 * pulse;
+    phase += SPEED;
+    if (phase >= 1) phase = 0;
 
-    const light = ctx.createRadialGradient(cx, cy, 0, cx, cy, lightR);
-    light.addColorStop(0, 'rgba(255, 252, 240, 1)');
-    light.addColorStop(0.03, 'rgba(255, 248, 210, 0.97)');
-    light.addColorStop(0.1, 'rgba(250, 210, 120, 0.65)');
-    light.addColorStop(0.25, 'rgba(245, 166, 35, 0.18)');
-    light.addColorStop(0.55, 'rgba(220, 120, 20, 0.04)');
-    light.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = light;
-    ctx.fillRect(0, 0, W, H);
-
-    // Subtle second glow halo
-    const haloR = Math.min(W, H) * 0.38;
-    const halo = ctx.createRadialGradient(cx, cy, 0, cx, cy, haloR);
-    halo.addColorStop(0, 'rgba(245, 180, 60, 0.06)');
-    halo.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = halo;
-    ctx.fillRect(0, 0, W, H);
-
-    time += SPEED;
     requestAnimationFrame(draw);
   }
 

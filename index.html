@@ -28,7 +28,7 @@
       </h1>
       <p class="hero-sub">
         Uma simulação computacional da experiência de quase-morte<br>
-        através da física do córtex visual primário.
+        através da física do córtex visual primário e da retina.
       </p>
       <p class="hero-authors">Ester Chilaver &amp; Victor Gomes</p>
       <a href="#modulos" class="hero-scroll">
@@ -48,21 +48,24 @@
         <div class="about-text">
           <p>
             Relatos de experiências de quase-morte (EQM) frequentemente descrevem
-            a mesma visão: um escurecimento progressivo das bordas do campo visual,
-            com uma luz intensa persistindo ao centro — o famoso "túnel de luz".
+            a mesma visão: uma luz intensa e centralizada, circundada por escuridão
+            progressiva — o famoso "túnel de luz". Amplamente documentado, esse
+            fenômeno permanece pouco compreendido em sua base neurobiológica.
           </p>
           <p>
-            A hipótese que guia este projeto: à medida que o suprimento de
-            <strong>glicose e oxigênio</strong> cessa, as células da retina
-            começam a falhar. As células da <strong>fóvea</strong> — responsáveis
-            pela visão central e as mais metabolicamente exigentes — são as
-            <em>últimas</em> a morrer.
+            A hipótese central: sob condições de <strong>hipóxia e hipoglicemia</strong>,
+            os fotorreceptores da retina — bastonetes e cones — entram em falência
+            metabólica. No escuro, essas células se mantêm despolarizadas e liberam
+            glutamato continuamente. Quando o suprimento energético cessa, esse sinal
+            estruturado é interrompido, privando o córtex visual de sua entrada normal.
           </p>
           <p>
-            O resultado é previsível pela física: a visão periférica se apaga primeiro,
-            deixando apenas um brilho central. A <strong>difusão</strong> é o mecanismo
-            que governa tanto o espalhamento de metabólitos quanto a atividade neural
-            que iremos simular módulo a módulo.
+            Diante da ausência de input coerente, o sistema visual pode reagir com
+            <strong>preenchimento perceptivo</strong> — reinterpretando a perda de sinal
+            como luminosidade difusa. A preservação temporária de pequenas áreas centrais
+            de sinal, combinada a esse fenômeno, é o que possivelmente explica a percepção
+            da luz e da sensação de túnel. As <strong>equações de difusão-reação</strong>
+            são o instrumento matemático para modelar essa dinâmica espaço-temporal.
           </p>
         </div>
 
@@ -73,11 +76,15 @@
           </div>
           <div class="fact-item">
             <div class="fact-label">Mecanismo</div>
-            <div class="fact-value">Falência metabólica da retina</div>
+            <div class="fact-value">Falência metabólica dos fotorreceptores sob hipóxia e hipoglicemia</div>
           </div>
           <div class="fact-item">
-            <div class="fact-label">Modelo</div>
-            <div class="fact-value">Difusão + Wilson-Cowan no córtex V1</div>
+            <div class="fact-label">Modelo principal</div>
+            <div class="fact-value">Difusão-reação · transporte de O₂ e glicose na retina</div>
+          </div>
+          <div class="fact-item">
+            <div class="fact-label">Modelo exploratório</div>
+            <div class="fact-value">Wilson-Cowan no córtex V1 · análise comparativa</div>
           </div>
           <div class="fact-item">
             <div class="fact-label">Ferramentas</div>
