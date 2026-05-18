@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Neurociência Computacional — Luz no Fim do Túnel</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="css/theme.css">
+  <link rel="stylesheet" href="css/home.css">
+</head>
+
+<body class="home">
+
+  <!-- ══ HERO: Túnel de Luz ══ -->
+  <section class="hero">
+    <canvas id="tunnelCanvas" class="tunnel-canvas"></canvas>
+
+    <div class="hero-content">
+      <div class="hero-label">Neurociência Computacional</div>
+      <h1 class="hero-title">
+        Luz no Fim<br><em>do Túnel</em>
+      </h1>
+      <p class="hero-sub">
+        Uma simulação computacional da experiência de quase-morte<br>
+        através da física do córtex visual primário.
+      </p>
+      <p class="hero-authors">Ester Chilaver &amp; Victor Gomes</p>
+      <a href="#modulos" class="hero-scroll">
+        <span>Explorar</span>
+        <span class="scroll-arrow">↓</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ══ SOBRE O PROJETO ══ -->
+  <section class="about">
+    <div class="about-inner">
+      <div class="about-label">O Projeto</div>
+      <h2 class="about-title">Por que a luz?</h2>
+
+      <div class="about-grid">
+        <div class="about-text">
+          <p>
+            Relatos de experiências de quase-morte (EQM) frequentemente descrevem
+            a mesma visão: um escurecimento progressivo das bordas do campo visual,
+            com uma luz intensa persistindo ao centro — o famoso "túnel de luz".
+          </p>
+          <p>
+            A hipótese que guia este projeto: à medida que o suprimento de
+            <strong>glicose e oxigênio</strong> cessa, as células da retina
+            começam a falhar. As células da <strong>fóvea</strong> — responsáveis
+            pela visão central e as mais metabolicamente exigentes — são as
+            <em>últimas</em> a morrer.
+          </p>
+          <p>
+            O resultado é previsível pela física: a visão periférica se apaga primeiro,
+            deixando apenas um brilho central. A <strong>difusão</strong> é o mecanismo
+            que governa tanto o espalhamento de metabólitos quanto a atividade neural
+            que iremos simular módulo a módulo.
+          </p>
+        </div>
+
+        <div class="about-facts">
+          <div class="fact-item">
+            <div class="fact-label">Fenômeno</div>
+            <div class="fact-value">Experiência de Quase-Morte (EQM)</div>
+          </div>
+          <div class="fact-item">
+            <div class="fact-label">Mecanismo</div>
+            <div class="fact-value">Falência metabólica da retina</div>
+          </div>
+          <div class="fact-item">
+            <div class="fact-label">Modelo</div>
+            <div class="fact-value">Difusão + Wilson-Cowan no córtex V1</div>
+          </div>
+          <div class="fact-item">
+            <div class="fact-label">Ferramentas</div>
+            <div class="fact-value">Python · NumPy · Google Colab</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ MÓDULOS ══ -->
+  <section class="modules" id="modulos">
+    <div class="modules-inner">
+      <div class="modules-header">
+        <div class="section-label">A Jornada</div>
+        <h2 class="modules-title">Do Micro ao Campo</h2>
+        <p class="modules-desc">
+          A difusão é o fio condutor. Cada módulo constrói sobre o anterior,
+          até chegarmos à simulação completa do córtex visual em isquemia.
+        </p>
+      </div>
+
+      <div class="modules-grid">
+
+        <!-- Módulo 01 — Disponível -->
+        <a href="difusao_aula1.html" class="mod-card active">
+          <div class="mod-number">01</div>
+          <div class="mod-badge-chip active">Disponível</div>
+          <div class="mod-title">Fundamentos da Difusão</div>
+          <div class="mod-topics">Movimento Browniano · Lei de Einstein · MSD</div>
+          <div class="mod-diffusion">
+            <span class="mod-diff-label">Difusão como</span>
+            Base física: como moléculas se movem no tecido neural
+          </div>
+          <div class="mod-cta">Acessar módulo →</div>
+        </a>
+
+        <!-- Módulo 02 -->
+        <div class="mod-card">
+          <div class="mod-number">02</div>
+          <div class="mod-badge-chip">Em breve</div>
+          <div class="mod-title">Métodos Numéricos</div>
+          <div class="mod-topics">Euler · Runge-Kutta · Diferenças Finitas</div>
+          <div class="mod-diffusion">
+            <span class="mod-diff-label">Difusão como</span>
+            Implementação de ∂²/∂x² — como resolver a EDP na grade
+          </div>
+        </div>
+
+        <!-- Módulo 03 -->
+        <div class="mod-card">
+          <div class="mod-number">03</div>
+          <div class="mod-badge-chip">Em breve</div>
+          <div class="mod-title">Modelos de População</div>
+          <div class="mod-topics">Wilson-Cowan · Dinâmica E-I · Estabilidade</div>
+          <div class="mod-diffusion">
+            <span class="mod-diff-label">Difusão como</span>
+            Ainda ausente — apenas dinâmica temporal local
+          </div>
+        </div>
+
+        <!-- Módulo 04 -->
+        <div class="mod-card">
+          <div class="mod-number">04</div>
+          <div class="mod-badge-chip">Em breve</div>
+          <div class="mod-title">Modelos de Campo</div>
+          <div class="mod-topics">Wilson-Cowan + Difusão · Córtex V1 · Isquemia</div>
+          <div class="mod-diffusion">
+            <span class="mod-diff-label">Difusão como</span>
+            Termo espacial D∇²A — conectividade cortical completa
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer class="home-footer">
+    <div class="home-footer-inner">
+      <div class="home-footer-left">
+        Neurociência Computacional<br>
+        Ester Chilaver &amp; Victor Gomes
+      </div>
+      <div class="home-footer-right">
+        <a href="difusao_aula1.html">Módulo 01 — Difusão →</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/home.js"></script>
+</body>
+
+</html>

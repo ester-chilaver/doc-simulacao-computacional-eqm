@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Difusão — Módulo 01 | Neurociência Computacional</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <link rel="stylesheet" href="css/theme.css">
+</head>
+
+<body>
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- ══ HEADER ══ -->
+  <header class="header">
+    <div class="header-noise"></div>
+    <div class="header-inner">
+      <div class="module-tag">Módulo 01 — Neurociência Computacional</div>
+      <h1>A Física do<br><em>Movimento Aleatório</em></h1>
+      <p class="header-lead">Por Ester Chilaver e Victor Gomes.</p>
+      <div class="header-meta">
+        <div class="meta-item">
+          <span class="meta-label">Conceito Central</span>
+          <span class="meta-value">Difusão &amp; Movimento Browniano</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Ferramentas</span>
+          <span class="meta-value">Python · NumPy · Matplotlib</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Destino</span>
+          <span class="meta-value">Modelagem do Córtex Visual V1</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ CONTENT ══ -->
+  <div class="content">
+
+    <div class="aside" style="margin:40px 0 0;">
+      <span class="aside-icon">🗣️</span>
+      <div class="aside-title">Por que estou aprendendo isso?</div>
+      <p>
+        Vamos conectar a física do movimento aleatório com a propagação de atividade neural,
+        preparando o terreno para os modelos de campo.
+      </p>
+    </div>
+
+    <!-- ── 1. BROWNIANO ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="browniano"></span>
+      <div class="section-label">01 — Origem</div>
+      <h2>Movimento Browniano</h2>
+
+      <iframe src="https://drive.google.com/file/d/1QVi3ICzp5QpuX53FExotfK2WCoeLq2Ge/view?usp=sharing"
+        width="100%" height="700" frameborder="0"></iframe>
+
+      <p>
+        Imagine que você é um indivíduo bastante curioso e atento, e, de tão curioso, decidiu
+        observar, em seu telescópio particular, grãozinhos de pólen sobre a água.
+      </p>
+
+      <p>
+        Dado que estás numa época muito anterior à descoberta da existência do átomo, o caminho
+        aleatório que esse grão de pólen faz na água só pode ter uma explicação:
+        <strong>"Ele está vivo"</strong>. Ou pelo menos foi isso que o cientista que deu nome
+        a esse "caminho" do grão de pólen na água achou.
+      </p>
+
+      <p>
+        <strong>Robert Brown</strong> foi o primeiro a descrever cientificamente aquilo que
+        posteriormente chamaríamos de "Movimento Browniano" — também conhecido como
+        "Caminhada Aleatória", foco no <em>Aleatória</em>. Esses nomes se tornaram então como
+        denominamos o percurso feito por uma partícula inserida num fluido, seja ele líquido ou gasoso.
+      </p>
+
+      <p>
+        Brown, porém, não foi capaz de descrever mecânica ou matematicamente o que era esse
+        movimento, mas quase 80 anos depois, um cara conhecido como Albert Einstein daria
+        solução a esse problema.
+      </p>
+
+      <div class="aside">
+        <span class="aside-icon">🧭</span>
+        <div class="aside-title">Contextualizando…</div>
+        <p>
+          Embora a teoria atômica e a agitação térmica molecular fossem amplamente utilizadas
+          como modelos teóricos no início do século XX, sua realidade física ainda era objeto
+          de debate. A formulação de Einstein para o movimento browniano foi decisiva ao
+          transformar a hipótese da existência e do movimento dos átomos em uma previsão
+          quantitativa experimentalmente verificável.
+        </p>
+      </div>
+
+      <p>
+        Mesmo não havendo consenso sobre a existência do átomo, tampouco sobre a possibilidade
+        de suas vibrações gradualmente crescentes com a temperatura, Einstein considerou uma
+        certeira hipótese:
+      </p>
+
+      <blockquote>
+        <p>"Vamos assumir que as moléculas do fluido existem e estão em agitação térmica real.
+          Se isso for verdade, então elas devem produzir um efeito estatístico mensurável sobre
+          uma partícula visível."</p>
+      </blockquote>
+
+      <p>
+        Dessa forma, o homenzinho de cabelos arrepiados transformou uma hipótese em previsão
+        experimental testável — conectando um movimento microscópico invisível com uma grandeza
+        macroscópica mensurável.
+      </p>
+
+      <p>
+        Porém, não à toa se fala sobre a famosa frase popularizada por Isaac Newton:
+        <em>"Se vi mais longe, foi por estar sobre ombros de gigantes"</em>. Einstein, até chegar
+        à equação do Movimento Browniano, precisou utilizar conhecimentos já entregues pelas mãos
+        de algumas mentes brilhantes do passado. Falar sobre elas é contextualizar um conhecimento
+        que não nasceu do nada…
+      </p>
+
+      <p>
+        Antes de Einstein estudar o movimento browniano, já existia uma equação que descrevia
+        como algo se espalha no espaço: a equação do calor, formulada por <strong>Joseph Fourier</strong>.
+      </p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── 2. FOURIER ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="calor"></span>
+      <div class="section-label">02 — Fundação Matemática</div>
+      <h2>A Lei da Difusão do Calor</h2>
+
+      <p>
+        Joseph Fourier, no início do século XIX, estudava em seu laboratório uma questão difícil
+        de se responder sem o conhecimento que existe atualmente:
+      </p>
+
+      <blockquote>
+        <p>"Como o calor evolui no espaço e no tempo?"</p>
+      </blockquote>
+
+      <p>
+        Note que essa não era uma pergunta microscópica — não havia consenso sólido sobre a
+        realidade física dos átomos. Para respondê-la, Fourier considerou três coisas:
+      </p>
+
+      <div class="observations-list">
+        <div class="bridge-feature">
+          <strong>1.</strong> Se existe diferença de temperatura entre regiões vizinhas, há fluxo de calor
+        </div>
+        <div class="bridge-feature">
+          <strong>2.</strong> Esse fluxo tende a suavizar essas diferenças
+        </div>
+        <div class="bridge-feature">
+          <strong>3.</strong> A evolução temporal depende de como está a <strong>curvatura</strong> do perfil de temperatura
+        </div>
+      </div>
+
+      <p>Tudo isso poderia se resumir em:</p>
+
+      <div class="math-block">
+        <div class="eq">∂T/∂t = α · ∇²T</div>
+        <div class="eq-parts">
+          <div class="eq-part">
+            <span class="sym">∂T/∂t</span>
+            Taxa de variação temporal da temperatura em um ponto
+          </div>
+          <div class="eq-part">
+            <span class="sym">α</span>
+            Mede o quão rápido o material conduz calor — materiais com alta difusividade espalham energia mais rapidamente
+          </div>
+          <div class="eq-part">
+            <span class="sym">∇²T</span>
+            Indica a curvatura do perfil espacial
+          </div>
+        </div>
+      </div>
+
+      <div class="aside">
+        <span class="aside-icon">♦️</span>
+        <div class="aside-title">Cartas na manga — o Laplaciano</div>
+        <p>
+          A curvatura indicada na equação por ∇²T nada mais é do que a segunda derivada.
+          O Laplaciano é a <strong>soma das segundas derivadas parciais</strong> em todas as
+          direções espaciais disponíveis:
+        </p>
+        <div class="math-block" style="margin:12px 0;padding:16px 20px;text-align:left;">
+          <div style="font-family:var(--mono);font-size:12px;color:var(--text-muted);margin-bottom:6px;">1D:</div>
+          <div class="eq" style="font-size:16px;margin-bottom:16px;">∇²T = ∂²T/∂x²</div>
+          <div style="font-family:var(--mono);font-size:12px;color:var(--text-muted);margin-bottom:6px;">3D:</div>
+          <div class="eq" style="font-size:16px;margin-bottom:0;">∇²T = ∂²T/∂x² + ∂²T/∂y² + ∂²T/∂z²</div>
+        </div>
+        <p>
+          Diferente da primeira derivada, que mede a inclinação, a segunda derivada responde
+          se o comportamento da função naquele ponto está <em>mudando</em>:
+        </p>
+        <p>
+          <strong>Pico</strong> → curvatura negativa → ∇²T &lt; 0 → ∂T/∂t &lt; 0 → <em>o ponto começa a esfriar</em><br>
+          <strong>Vale</strong> → curvatura positiva → ∇²T &gt; 0 → ∂T/∂t &gt; 0 → <em>o ponto aquece</em><br>
+          <strong>Rampa</strong> → curvatura zero → sem mudança
+        </p>
+        <p>
+          Considere uma barra de metal em 1D: se esquentarmos um ponto e plotarmos o perfil T(x),
+          obteremos um pico — e nesse caso, pico → curvatura negativa → o ponto começa a esfriar.
+        </p>
+      </div>
+
+      <p>
+        Em resumo, a equação do calor diz que a taxa de variação temporal da temperatura em um
+        ponto depende de quanto o valor naquele ponto difere da <strong>média local ao redor</strong> dele.
+      </p>
+
+      <!-- SIM 1 -->
+      <div class="sim-card reveal">
+        <div class="sim-header">
+          <div class="sim-dot"></div>
+          <span class="sim-title">sim_01 — difusão_calor.js</span>
+          <span class="sim-badge">interativo</span>
+        </div>
+        <div class="sim-body">
+          <div class="canvas-wrap" style="height:200px;position:relative;">
+            <canvas id="heatCanvas" style="height:200px;"></canvas>
+          </div>
+          <div class="sim-controls">
+            <div class="ctrl-group">
+              <div class="ctrl-label">
+                Difusividade α <span id="alphaVal">0.15</span>
+              </div>
+              <input type="range" id="alphaSlider" min="0.01" max="0.45" step="0.01" value="0.15">
+            </div>
+            <div class="ctrl-group">
+              <div class="ctrl-label">
+                Posição do pico <span id="peakVal">50%</span>
+              </div>
+              <input type="range" id="peakSlider" min="10" max="90" step="1" value="50">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="primary" id="heatReset">↺ Reiniciar</button>
+            <button id="heatPause">⏸ Pausar</button>
+          </div>
+          <div class="sim-stat">
+            <div class="stat-item">
+              <span class="stat-l">TEMPO (t)</span>
+              <span class="stat-v" id="heatTime">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-l">T_MAX</span>
+              <span class="stat-v" id="heatMax">100</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-l">ENTROPIA (σ)</span>
+              <span class="stat-v" id="heatEntropy">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p style="font-size:14px;color:var(--text-dim);text-align:center;margin-top:-24px;">
+        <em>Inspirado em Khan Academy.</em> Note que a taxa de variação da temperatura no tempo
+        é proporcional à curvatura do perfil espacial. Onde a curva está mais "encurvada",
+        a mudança é mais intensa. Onde ela já está quase plana, a evolução é lenta.
+      </p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── 3. EINSTEIN ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="einstein"></span>
+      <div class="section-label">03 — De volta ao Movimento Browniano</div>
+      <h2>Probabilidade se Espalhando</h2>
+
+      <p>
+        Embora formulada para descrever a propagação do calor, a "Lei da Difusão do Calor"
+        revelou uma estrutura matemática mais geral: ela descreve qualquer processo em que uma
+        quantidade se espalha devido a diferenças locais… e mais do que isso: como a
+        <strong>probabilidade de posição</strong> se espalha. Essa estrutura seria reutilizada
+        por Albert Einstein ao analisar o movimento browniano.
+      </p>
+
+      <p>
+        Imagine agora não uma barra de metal, mas uma única partícula microscópica suspensa em
+        um fluido. Não conseguimos ver as moléculas que a cercam, mas sabemos (ou pelo menos
+        suspeitamos) que elas estão em constante agitação térmica.
+      </p>
+
+      <p>
+        Colisões pequenas… empurrões imprevisíveis… Mas o efeito coletivo dessas colisões não
+        é caótico no sentido matemático. Ele é <strong>estatístico</strong>! Se repetirmos o
+        experimento muitas vezes, observaremos não uma trajetória determinística, mas um
+        espalhamento progressivo das posições possíveis da partícula.
+      </p>
+
+      <p>
+        E então surge a pergunta natural: <em>como a probabilidade de posição dessa partícula
+        evolui no tempo?</em>
+      </p>
+
+      <p>
+        Chamemos essa densidade de probabilidade de p(x,t) — ela nos diz quão provável é
+        encontrar a partícula na posição x no tempo t. Einstein propôs que essa probabilidade
+        deveria obedecer exatamente à mesma estrutura matemática da equação do calor. A única
+        diferença será a interpretação:
+      </p>
+
+      <div class="math-block">
+        <div class="eq">∂p/∂t = D · ∇²p</div>
+        <div class="eq-parts">
+          <div class="eq-part">
+            <span class="sym">p(x,t)</span>
+            Antes, era temperatura se espalhando. Agora, é probabilidade se espalhando.
+          </div>
+          <div class="eq-part">
+            <span class="sym">D</span>
+            Coeficiente de difusão — controla o quão rapidamente a incerteza espacial cresce
+          </div>
+        </div>
+      </div>
+
+      <p>
+        Suponha que no instante inicial saibamos exatamente onde a partícula está — toda a
+        probabilidade concentrada em um único ponto, sem nenhuma incerteza:
+      </p>
+
+      <div class="math-block">
+        <div class="eq">p(x, 0) = δ(x)</div>
+        <div class="eq-parts">
+          <div class="eq-part">
+            <span class="sym">δ(x)</span>
+            Delta de Dirac — toda a probabilidade concentrada em um único ponto
+          </div>
+        </div>
+      </div>
+
+      <p>
+        Mas assim que o tempo começa a passar, a incerteza cresce e a distribuição se alarga.
+        A partícula pode estar um pouco à esquerda, um pouco à direita, cada vez mais distante
+        do ponto inicial. A solução da equação de difusão com essa condição inicial é:
+      </p>
+
+      <div class="math-block">
+        <div class="eq">p(x,t) = (1 / √(4πDt)) · exp(−x² / 4Dt)</div>
+        <div class="eq-parts">
+          <div class="eq-part">
+            <span class="sym">área = 1</span>
+            Conforme o tempo cresce, a curva se alarga e a altura diminui — mas a área total
+            permanece 1, pois a probabilidade total é sempre conservada
+          </div>
+        </div>
+      </div>
+
+      <div class="aside">
+        <span class="aside-icon">♦️</span>
+        <div class="aside-title">Por que a distribuição acaba sendo uma gaussiana?</div>
+        <p>
+          O movimento browniano pode ser visto como a soma de muitos pequenos deslocamentos
+          aleatórios independentes. Cada colisão microscópica contribui com um pequeno passo.
+        </p>
+        <p>
+          E aqui entra o <strong>Teorema Central do Limite</strong>: quando somamos muitas
+          variáveis aleatórias independentes, independentemente da distribuição individual
+          (desde que tenham variância finita), o resultado tende a uma distribuição normal —
+          ou seja, a uma gaussiana. Nossa assinatura estatística da aleatoriedade acumulada.
+        </p>
+      </div>
+
+      <p>Se calcularmos o deslocamento médio quadrático:</p>
+
+      <div class="math-block">
+        <div class="eq" style="font-size:18px;">⟨x²⟩ = ∫ x² · p(x,t) dx</div>
+      </div>
+
+      <p>Obtemos:</p>
+
+      <div class="math-block">
+        <div class="eq">⟨x²⟩ = 2Dt</div>
+        <div class="eq-parts">
+          <div class="eq-part">
+            <span class="sym">⟨x²⟩</span>
+            A variância cresce <strong>linearmente</strong> com o tempo
+          </div>
+          <div class="eq-part">
+            <span class="sym">√⟨x²⟩ ~ √t</span>
+            A distância típica da partícula cresce como a raiz do tempo
+          </div>
+        </div>
+      </div>
+
+      <p>
+        Esse foi o resultado que permitiu a Einstein conectar teoria e experimento —
+        e, indiretamente, confirmar a existência dos átomos.
+      </p>
+
+      <!-- SIM 2 -->
+      <div class="sim-card reveal">
+        <div class="sim-header">
+          <div class="sim-dot"></div>
+          <span class="sim-title">sim_02 — einstein_msd.js</span>
+          <span class="sim-badge">interativo</span>
+        </div>
+        <div class="sim-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="canvas-wrap" style="height:180px;">
+              <canvas id="gaussCanvas" style="height:180px;"></canvas>
+            </div>
+            <div class="canvas-wrap" style="height:180px;">
+              <canvas id="msdCanvas" style="height:180px;"></canvas>
+            </div>
+          </div>
+          <div
+            style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--text-dim);margin:4px 0 16px;">
+            <span>↑ Distribuição de probabilidade p(x,t)</span>
+            <span>↑ MSD vs. tempo — lei de Einstein ⟨x²⟩=2Dt</span>
+          </div>
+          <div class="sim-controls">
+            <div class="ctrl-group">
+              <div class="ctrl-label">Coef. de difusão D <span id="dVal">0.5</span></div>
+              <input type="range" id="dSlider" min="0.1" max="2.0" step="0.1" value="0.5">
+            </div>
+            <div class="ctrl-group">
+              <div class="ctrl-label">Velocidade <span id="speedVal">1×</span></div>
+              <input type="range" id="speedSlider" min="0.2" max="4" step="0.2" value="1">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="primary" id="gaussReset">↺ Reiniciar</button>
+            <button id="gaussPause">⏸ Pausar</button>
+          </div>
+          <div class="sim-stat">
+            <div class="stat-item">
+              <span class="stat-l">TEMPO (t)</span>
+              <span class="stat-v" id="gaussTime">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-l">σ (largura)</span>
+              <span class="stat-v" id="gaussSigma">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-l">MSD teórico</span>
+              <span class="stat-v" id="gaussMSD">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── 4. NEUROCIÊNCIA ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="neuro"></span>
+      <div class="section-label">04 — Conexão com Neurociência</div>
+      <h2>Três Escalas de Difusão no Sistema Neural</h2>
+
+      <p>
+        O movimento browniano que estudamos não é apenas física abstrata — ele opera
+        em <strong>três escalas distintas</strong> no sistema nervoso, cada uma com
+        consequências diretas para a neurociência computacional.
+      </p>
+
+      <div class="scale-grid">
+        <div class="scale-card reveal">
+          <div class="scale-num">ESCALA 01</div>
+          <div class="scale-name">Molecular</div>
+          <div class="scale-detail">
+            Neurotransmissores (glutamato, GABA) difundem pela fenda sináptica após liberação.
+            Íons Na⁺, K⁺, Ca²⁺ atravessam canais e citoplasma.
+          </div>
+          <div class="scale-range">Nanômetros · Microssegundos</div>
+        </div>
+        <div class="scale-card reveal">
+          <div class="scale-num">ESCALA 02</div>
+          <div class="scale-name">Metabólica</div>
+          <div class="scale-detail">
+            O₂ e glicose difundem dos capilares (espaçados ~50 μm) para os neurônios.
+            Em isquemia, a distância efetiva √(2Dt) determina a sobrevivência do tecido.
+          </div>
+          <div class="scale-range">Micrômetros · Segundos</div>
+        </div>
+        <div class="scale-card reveal">
+          <div class="scale-num">ESCALA 03</div>
+          <div class="scale-name">Campo Neural</div>
+          <div class="scale-detail">
+            Atividade neural se "difunde" pelo córtex via conexões laterais.
+            O termo D∇²A nos Modelos de Campo Neural representa essa propagação espacial.
+          </div>
+          <div class="scale-range">Milímetros · Milissegundos</div>
+        </div>
+      </div>
+
+      <div class="aside">
+        <span class="aside-icon">🧠</span>
+        <div class="aside-title">Por que estamos aprendendo isso?</div>
+        <p>
+          O objetivo final deste curso é simular o <strong>Córtex Visual Primário (V1)</strong>
+          e compreender a falência metabólica. A difusão é o mecanismo que conecta:
+        </p>
+        <p>
+          A <strong>propagação neural</strong> — atividade que se espalha pelas conexões laterais —
+          com a <strong>falência metabólica</strong> — colapso quando O₂ e glicose não conseguem
+          mais difundir a tempo. Essa mesma equação explica os fenômenos perceptuais observados
+          em experiências de quase-morte.
+        </p>
+      </div>
+
+      <h3>A Ponte: do MSD à Equação de Campo</h3>
+
+      <div class="math-block">
+        <div class="eq" style="font-size:14px;line-height:2.5;">
+          Movimento Browniano → <span style="color:var(--text-muted)">[Teorema Central do Limite]</span> → ∂A/∂t = D·∇²A
+        </div>
+        <div class="eq-label">
+          Esta equação será combinada com a dinâmica de Wilson-Cowan (Módulo 03) para o modelo completo (Módulo 04).
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── 5. CÓDIGO ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="codigo"></span>
+      <div class="section-label">05 — Implementação</div>
+      <h2>Do Conceito ao Código</h2>
+
+      <p>
+        O movimento browniano é modelado computacionalmente pela <strong>Caminhada Aleatória</strong>.
+        Cada passo é ±1 com probabilidade igual, e a trajetória é a soma cumulativa desses passos.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">python — caminhada_aleatoria_1d</span>
+          <button class="copy-btn">copiar</button>
+        </div>
+        <pre><code><span class="kw">import</span> numpy <span class="kw">as</span> np
+
+<span class="kw">def</span> <span class="fn">caminhada_aleatoria_1d</span>(n_passos, tamanho_passo=<span class="nm">1.0</span>, semente=<span class="kw">None</span>):
+    <span class="cm">"""Simula uma partícula em movimento browniano 1D."""</span>
+    <span class="kw">if</span> semente <span class="kw">is not None</span>:
+        np.<span class="fn">random.seed</span>(semente)
+
+    <span class="cm"># Gera passos aleatórios: +1 ou -1 com igual probabilidade</span>
+    passos = np.random.<span class="fn">choice</span>([-tamanho_passo, tamanho_passo], size=n_passos)
+
+    <span class="cm"># Trajetória = soma cumulativa dos passos</span>
+    trajetoria = np.<span class="fn">cumsum</span>(passos)
+    trajetoria = np.<span class="fn">insert</span>(trajetoria, <span class="nm">0</span>, <span class="nm">0.0</span>)  <span class="cm"># posição inicial</span>
+
+    <span class="kw">return</span> trajetoria</code></pre>
+      </div>
+
+      <p>
+        Para verificar a lei de Einstein (⟨x²⟩ = 2Dt), precisamos de um <strong>ensemble</strong>
+        de partículas. Uma única trajetória é aleatória demais — precisamos da média estatística.
+      </p>
+
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">python — calcular_msd</span>
+          <button class="copy-btn">copiar</button>
+        </div>
+        <pre><code><span class="kw">def</span> <span class="fn">calcular_msd</span>(n_particulas, n_passos, tamanho_passo=<span class="nm">1.0</span>):
+    <span class="cm">"""Calcula o Deslocamento Quadrático Médio de um ensemble."""</span>
+    todas_trajetorias = np.<span class="fn">array</span>([
+        <span class="fn">caminhada_aleatoria_1d</span>(n_passos, tamanho_passo)
+        <span class="kw">for</span> _ <span class="kw">in</span> <span class="fn">range</span>(n_particulas)
+    ])
+
+    <span class="cm"># MSD: média de x² sobre todas as partículas</span>
+    msd = np.<span class="fn">mean</span>(todas_trajetorias<span class="op">**</span><span class="nm">2</span>, axis=<span class="nm">0</span>)
+    tempo = np.<span class="fn">arange</span>(n_passos + <span class="nm">1</span>)
+
+    <span class="kw">return</span> msd, tempo
+
+<span class="cm"># Verificação: D teórico = tamanho_passo² / 2</span>
+D_teorico = (tamanho_passo<span class="op">**</span><span class="nm">2</span>) / <span class="nm">2.0</span>
+msd_teorico = <span class="nm">2</span> * D_teorico * tempo  <span class="cm"># lei de Einstein</span></code></pre>
+      </div>
+
+      <!-- SIM 3 -->
+      <div class="sim-card reveal">
+        <div class="sim-header">
+          <div class="sim-dot"></div>
+          <span class="sim-title">sim_03 — random_walk_ensemble.js</span>
+          <span class="sim-badge">interativo</span>
+        </div>
+        <div class="sim-body">
+          <div class="canvas-wrap" style="height:220px;">
+            <canvas id="walkCanvas" style="height:220px;"></canvas>
+          </div>
+          <div class="sim-controls">
+            <div class="ctrl-group">
+              <div class="ctrl-label">Nº de partículas <span id="nPartVal">20</span></div>
+              <input type="range" id="nPartSlider" min="1" max="100" step="1" value="20">
+            </div>
+            <div class="ctrl-group">
+              <div class="ctrl-label">Tamanho do passo <span id="stepVal">1.0</span></div>
+              <input type="range" id="stepSlider" min="0.5" max="3.0" step="0.1" value="1.0">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="primary" id="walkRun">▶ Executar</button>
+            <button id="walkReset2">↺ Novo ensemble</button>
+          </div>
+          <div class="sim-stat">
+            <div class="stat-item">
+              <span class="stat-l">PASSO (t)</span>
+              <span class="stat-v" id="walkStep">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-l">MSD simulado</span>
+              <span class="stat-v" id="walkMSDsim">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-l">MSD teórico</span>
+              <span class="stat-v" id="walkMSDtheo">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-l">Erro rel.</span>
+              <span class="stat-v" id="walkErr">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── BRIDGE TO NOTEBOOK ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="notebook"></span>
+      <div class="notebook-bridge">
+        <div class="bridge-eyebrow">↳ Notebook Google Colab</div>
+        <div class="bridge-title">Agora é a sua vez de simular</div>
+        <p class="bridge-desc">
+          As simulações acima mostram os conceitos em ação. No notebook do curso, você
+          vai construir cada uma dessas simulações do zero em Python — controlando cada
+          parâmetro, visualizando os resultados e verificando as previsões de Einstein.
+        </p>
+        <div class="bridge-features">
+          <div class="bridge-feature">Caminhada aleatória 1D com NumPy</div>
+          <div class="bridge-feature">Ensemble de 5000 partículas</div>
+          <div class="bridge-feature">Verificação da lei ⟨x²⟩ = 2Dt</div>
+          <div class="bridge-feature">Desafios e experimentos guiados</div>
+        </div>
+        <a href="https://colab.research.google.com/drive/1QVi3ICzp5QpuX53FExotfK2WCoeLq2Ge"
+          class="btn-colab" target="_blank" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="16" fill="#F9AB00" />
+            <path d="M9 16c0-3.866 3.134-7 7-7s7 3.134 7 7-3.134 7-7 7-7-3.134-7-7z" fill="#0e0e10" />
+            <path d="M13 16c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z" fill="#F9AB00" />
+          </svg>
+          Abrir no Google Colab
+        </a>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── ROADMAP ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="roadmap"></span>
+      <div class="section-label">06 — Roteiro do Curso</div>
+      <h2>A Jornada: Micro → Campo</h2>
+      <p>
+        A difusão é o fio condutor. Veja como ela aparece em cada módulo até chegarmos
+        à simulação completa do córtex visual.
+      </p>
+
+      <table class="roadmap">
+        <thead>
+          <tr>
+            <th>Módulo</th>
+            <th>Foco</th>
+            <th>Difusão presente como…</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="current">
+            <td><span class="mod-badge active">01 — Atual</span></td>
+            <td>
+              <strong>Fundamentos da Difusão</strong>
+              Movimento Browniano · Lei de Einstein · MSD
+            </td>
+            <td>Base física: como moléculas se movem no tecido neural</td>
+          </tr>
+          <tr>
+            <td><span class="mod-badge">02</span></td>
+            <td>
+              <strong>Métodos Numéricos</strong>
+              Euler · Runge-Kutta · Diferenças Finitas
+            </td>
+            <td>Implementação de ∂²/∂x² — como resolver a EDP na grade</td>
+          </tr>
+          <tr>
+            <td><span class="mod-badge">03</span></td>
+            <td>
+              <strong>Modelos de População</strong>
+              Wilson-Cowan · Dinâmica E-I · Estabilidade
+            </td>
+            <td>Ainda ausente — apenas dinâmica temporal local</td>
+          </tr>
+          <tr>
+            <td><span class="mod-badge">04</span></td>
+            <td>
+              <strong>Modelos de Campo</strong>
+              Wilson-Cowan + Difusão · Córtex V1 · Isquemia
+            </td>
+            <td>Termo espacial D∇²A — conectividade cortical completa</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div><!-- /content -->
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="footer">
+      <div class="footer-left">
+        Neurociência Computacional — Módulo 01<br>
+        Difusão como Linguagem do Córtex Visual<br>
+        <a href="#browniano">↑ Voltar ao topo</a>
+      </div>
+      <a href="index.html" class="next-module">
+        <div>
+          <div class="nm-label">INÍCIO</div>
+          <div class="nm-title">← Página Principal</div>
+        </div>
+      </a>
+    </div>
+  </footer>
+
+  <script src="js/utils.js"></script>
+  <script src="js/sims-difusao.js"></script>
+</body>
+
+</html>
