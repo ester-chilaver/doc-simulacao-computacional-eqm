@@ -10,7 +10,7 @@
   const ctx = canvas.getContext('2d');
   const N = 200;
   let T = new Float32Array(N).fill(0);
-  let t = 0, alpha = 0.15, paused = false;
+  let t = 0, alpha = 0.15, paused = true;
   let peakPos = 100;
 
   function resize() {
@@ -94,7 +94,7 @@
   }
 
   function loop() {
-    if (!paused) { for (let i = 0; i < 3; i++) step(); }
+    if (!paused) { for (let i = 0; i < 0.5; i++) step(); }
     draw();
     requestAnimationFrame(loop);
   }
@@ -110,7 +110,13 @@
     reset();
   });
 
-  document.getElementById('heatReset').addEventListener('click', reset);
+  document.getElementById('heatPause').textContent = '▶ Iniciar';
+
+  document.getElementById('heatReset').addEventListener('click', function () {
+    reset();
+    paused = true;
+    document.getElementById('heatPause').textContent = '▶ Iniciar';
+  });
   document.getElementById('heatPause').addEventListener('click', function () {
     paused = !paused;
     this.textContent = paused ? '▶ Continuar' : '⏸ Pausar';
@@ -127,7 +133,7 @@
   const gCtx = gc.getContext('2d');
   const mCtx = mc.getContext('2d');
 
-  let D = 0.5, t = 0.5, speed = 1, paused = false;
+  let D = 0.5, t = 0.5, speed = 1, paused = true;
   const msdHistory = [];
   const maxT = 120;
 
@@ -269,7 +275,13 @@
     document.getElementById('speedVal').textContent = speed.toFixed(1) + '×';
   });
 
-  document.getElementById('gaussReset').addEventListener('click', reset);
+  document.getElementById('gaussPause').textContent = '▶ Iniciar';
+
+  document.getElementById('gaussReset').addEventListener('click', function () {
+    reset();
+    paused = true;
+    document.getElementById('gaussPause').textContent = '▶ Iniciar';
+  });
   document.getElementById('gaussPause').addEventListener('click', function () {
     paused = !paused;
     this.textContent = paused ? '▶ Continuar' : '⏸ Pausar';

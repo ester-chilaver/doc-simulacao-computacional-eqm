@@ -24,8 +24,8 @@
     canvas.width = W * dpr;
     canvas.height = H * dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    cx = W * 0.5;
-    cy = H * 0.5;
+    cx = W * 0.8;
+    cy = H * 0.8;
   }
 
   function draw() {
