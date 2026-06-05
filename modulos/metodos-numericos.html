@@ -1,0 +1,1114 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Módulo 02 — Métodos Numéricos | Neurociência Computacional</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/theme.css">
+  <style>
+    /* ── page-specific overrides ── */
+    .header { background: #090909; }
+
+    /* comparison table */
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 28px 0;
+      font-size: 14px;
+    }
+    .compare-table th {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+    .compare-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-dim);
+      vertical-align: middle;
+      line-height: 1.55;
+    }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table td.highlight { color: var(--amber); font-family: var(--mono); font-size: 13px; }
+    .compare-table td.good { color: #a3d977; font-size: 13px; }
+    .compare-table td.bad  { color: #e05c5c; font-size: 13px; }
+
+    /* step counter for RK4 */
+    .rk4-steps {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 24px 0;
+    }
+    @media (max-width: 600px) { .rk4-steps { grid-template-columns: 1fr 1fr; } }
+
+    .rk4-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      transition: border-color 0.2s;
+    }
+    .rk4-step:hover { border-color: var(--border-accent); }
+    .rk4-step-num {
+      font-family: var(--mono);
+      font-size: 22px;
+      color: var(--amber);
+      margin-bottom: 6px;
+    }
+    .rk4-step-label {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      letter-spacing: 0.06em;
+    }
+    .rk4-step-desc {
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* neighbor diagram */
+    .neighbor-diagram {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      margin: 28px 0;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+    .nd-cell {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 80px;
+      height: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+    }
+    .nd-cell.center {
+      border-color: var(--amber);
+      background: rgba(245,166,35,0.06);
+      width: 96px; height: 96px;
+    }
+    .nd-cell-sym { font-family: var(--mono); font-size: 14px; color: var(--amber); }
+    .nd-cell-label { font-family: var(--mono); font-size: 10px; color: var(--text-muted); }
+    .nd-arrow { font-size: 22px; color: var(--text-muted); padding: 0 4px; }
+
+    /* pipeline */
+    .pipeline {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 28px 0;
+    }
+    .pipe-item {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+    }
+    .pipe-num {
+      font-family: var(--mono);
+      font-size: 18px;
+      color: var(--amber);
+      opacity: 0.6;
+      min-width: 28px;
+    }
+    .pipe-content { flex: 1; }
+    .pipe-title { font-size: 14px; color: var(--text); font-weight: 500; margin-bottom: 4px; }
+    .pipe-desc { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+    .pipe-arrow { font-family: var(--mono); font-size: 18px; color: var(--border); }
+
+    .sim-caption {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: center;
+      margin: -8px 0 16px;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="progress-bar" id="progressBar"></div>
+
+  <!-- ══ HEADER ══ -->
+  <header class="header">
+    <div class="header-noise"></div>
+    <div class="header-inner">
+      <div class="module-tag">Módulo 02 — Neurociência Computacional</div>
+      <h1>Métodos Numéricos<br><em>para Sistemas Dinâmicos</em></h1>
+      <p class="header-lead">
+        As ferramentas computacionais que nos permitem simular o que as equações descrevem —
+        do decaimento neural ao colapso metabólico do córtex visual.
+      </p>
+      <div class="header-meta">
+        <div class="meta-item">
+          <span class="meta-label">Conceitos</span>
+          <span class="meta-value">Euler · Runge-Kutta · Diferenças Finitas</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Ferramentas</span>
+          <span class="meta-value">Python · NumPy · Matplotlib</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Pré-requisito</span>
+          <span class="meta-value"><a href="difusao.html">Módulo 01 — Difusão</a></span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Próximo</span>
+          <span class="meta-value">Módulo 03 — Wilson-Cowan</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ CONTENT ══ -->
+  <main class="content">
+
+    <!-- ── MOTIVAÇÃO ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="motivacao"></span>
+      <div class="section-label">00 — Por que estamos aqui</div>
+      <h2>A Ponte entre Equação e Simulação</h2>
+
+      <p>
+        No Módulo 1 chegamos à equação de difusão de Einstein. Mas há um problema: 
+        a maioria dos sistemas que vamos modelar — populações neurais, propagação de atividade 
+        cortical, falência metabólica — <strong>não tem solução analítica fechada</strong>.
+        Não existe fórmula para calcular diretamente.
+      </p>
+      <p>
+        É aqui que entram os <strong>métodos numéricos</strong>: algoritmos que aproximam 
+        a solução passo a passo, transformando uma equação diferencial em uma sequência 
+        de cálculos que o computador pode executar.
+      </p>
+
+      <div class="pipeline">
+        <div class="pipe-item">
+          <span class="pipe-num">01</span>
+          <div class="pipe-content">
+            <div class="pipe-title">Integração Temporal (EDOs)</div>
+            <div class="pipe-desc">Euler e RK4 — como avançar no tempo. Usado no Módulo 3 para simular a dinâmica Wilson-Cowan.</div>
+          </div>
+        </div>
+        <div class="pipe-item">
+          <span class="pipe-num">02</span>
+          <div class="pipe-content">
+            <div class="pipe-title">Integração Espacial (EDPs)</div>
+            <div class="pipe-desc">Diferenças Finitas — como calcular ∂²/∂x² na grade. Usado no Módulo 4 para o termo D∇²A de difusão cortical.</div>
+          </div>
+        </div>
+        <div class="pipe-item">
+          <span class="pipe-num">03</span>
+          <div class="pipe-content">
+            <div class="pipe-title">Integração combinada — Modelo Final</div>
+            <div class="pipe-desc">RK4 avança no tempo, Diferenças Finitas calcula o espaço. Isso é o Córtex Visual em isquemia.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── EULER ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="euler"></span>
+      <div class="section-label">01 — O Método Mais Simples</div>
+      <h2>Método de Euler</h2>
+
+      <p>
+        Para introduzir a lógica da integração numérica, usaremos uma EDO que 
+        <em>tem</em> solução analítica — assim podemos comparar o resultado numérico 
+        com a verdade exata. Escolhemos o <strong>decaimento exponencial</strong>:
+      </p>
+
+      <div class="math-block">
+        <div class="eq">dy/dt = −k · y(t) &nbsp;&nbsp; y(0) = y₀</div>
+        <div class="eq-parts">
+          <div class="eq-part"><span class="sym">k</span> Taxa de decaimento</div>
+          <div class="eq-part"><span class="sym">y(t) = y₀e^{−kt}</span> Solução analítica exata — nossa régua de comparação</div>
+        </div>
+      </div>
+
+      <p>
+        O Método de Euler parte de uma ideia geométrica simples: se eu sei onde estou 
+        agora e sei qual é a minha <strong>inclinação</strong> (a derivada), posso estimar 
+        onde estarei daqui a um pequeno passo <em>h</em>.
+      </p>
+
+      <div class="math-block">
+        <div class="eq">y<sub>i+1</sub> = y<sub>i</sub> + h · f(t<sub>i</sub>, y<sub>i</sub>)</div>
+        <div class="eq-parts">
+          <div class="eq-part"><span class="sym">h</span> Tamanho do passo de tempo — quanto "avançamos" a cada iteração</div>
+          <div class="eq-part"><span class="sym">f(t,y)</span> A própria EDO: nos diz qual é a inclinação em cada ponto</div>
+        </div>
+      </div>
+
+      <div class="aside reveal">
+        <span class="aside-icon">♦️</span>
+        <div class="aside-title">A intuição geométrica</div>
+        <p>
+          Imagine que você está num ponto da curva e só pode ver a <strong>tangente</strong> 
+          — a reta que toca a curva naquele instante. Euler diz: "siga essa reta por um passo 
+          h, e use o novo ponto como ponto de partida para o próximo passo."
+        </p>
+        <p>
+          O problema: a tangente é exata apenas <em>naquele instante</em>. À medida que a curva 
+          se dobra, a reta tangente se afasta da realidade. Quanto maior o <em>h</em>, 
+          maior o desvio acumulado — é o <strong>erro de truncamento</strong>.
+        </p>
+      </div>
+
+      <!-- SIM 1: EULER INTERATIVO -->
+      <div class="sim-card reveal">
+        <div class="sim-header">
+          <div class="sim-dot"></div>
+          <span class="sim-title">sim_01 — euler_decaimento.js</span>
+          <span class="sim-badge">interativo</span>
+        </div>
+        <div class="sim-body">
+          <div class="canvas-wrap" style="height:220px;">
+            <canvas id="eulerCanvas" style="height:220px;"></canvas>
+          </div>
+          <p class="sim-caption">Solução analítica (branco) vs. Método de Euler (laranja). Aumente h para ver o erro crescer.</p>
+          <div class="sim-controls">
+            <div class="ctrl-group">
+              <div class="ctrl-label">Passo h <span id="hEulerVal">0.5</span></div>
+              <input type="range" id="hEulerSlider" min="0.1" max="2.5" step="0.1" value="0.5">
+            </div>
+            <div class="ctrl-group">
+              <div class="ctrl-label">Taxa de decaimento k <span id="kVal">0.5</span></div>
+              <input type="range" id="kSlider" min="0.1" max="2.0" step="0.1" value="0.5">
+            </div>
+          </div>
+          <div class="sim-stat">
+            <div class="stat-item"><span class="stat-l">h atual</span><span class="stat-v" id="eulerH">0.5</span></div>
+            <div class="stat-item"><span class="stat-l">Erro final (t=10)</span><span class="stat-v" id="eulerErr">—</span></div>
+            <div class="stat-item"><span class="stat-l">Nº de passos</span><span class="stat-v" id="eulerSteps">—</span></div>
+            <div class="stat-item"><span class="stat-l">Status</span><span class="stat-v" id="eulerStatus">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="aside reveal">
+        <span class="aside-icon">🎯</span>
+        <div class="aside-title">Desafio para o aluno</div>
+        <p>
+          Altere o <code>H_EULER</code> no slider acima para valores menores (0.1) e maiores (1.5). 
+          Observe como o erro absoluto no tempo final se comporta.
+        </p>
+        <p>
+          <strong>O que acontece com h = 2.5?</strong> A solução diverge — isso é 
+          <strong>instabilidade numérica</strong>. O Método de Euler tem uma região de estabilidade 
+          finita: para a EDO y' = −ky, ele é estável apenas quando |1 − kh| ≤ 1.
+        </p>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── RK4 ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="rk4"></span>
+      <div class="section-label">02 — Mais Precisão, Mesmo Custo</div>
+      <h2>Runge-Kutta de 4ª Ordem (RK4)</h2>
+
+      <p>
+        Euler usa <em>uma</em> estimativa de inclinação por passo — a tangente no ponto atual. 
+        O RK4 usa <strong>quatro estimativas</strong> distribuídas ao longo do intervalo h 
+        e calcula uma <strong>média ponderada</strong> entre elas. O resultado é uma 
+        aproximação dramaticamente melhor com o mesmo tamanho de passo.
+      </p>
+
+      <div class="rk4-steps reveal">
+        <div class="rk4-step">
+          <div class="rk4-step-num">k₁</div>
+          <div class="rk4-step-label">Início</div>
+          <div class="rk4-step-desc">Inclinação no ponto de partida t<sub>i</sub></div>
+        </div>
+        <div class="rk4-step">
+          <div class="rk4-step-num">k₂</div>
+          <div class="rk4-step-label">Meio (k₁)</div>
+          <div class="rk4-step-desc">Inclinação no meio do passo, usando k₁</div>
+        </div>
+        <div class="rk4-step">
+          <div class="rk4-step-num">k₃</div>
+          <div class="rk4-step-label">Meio (k₂)</div>
+          <div class="rk4-step-desc">Inclinação no meio do passo, usando k₂</div>
+        </div>
+        <div class="rk4-step">
+          <div class="rk4-step-num">k₄</div>
+          <div class="rk4-step-label">Final</div>
+          <div class="rk4-step-desc">Inclinação no fim do passo t<sub>i+1</sub></div>
+        </div>
+      </div>
+
+      <div class="math-block reveal">
+        <div class="eq" style="font-size:17px; line-height:2.2;">
+          y<sub>i+1</sub> = y<sub>i</sub> + (h/6)(k₁ + 2k₂ + 2k₃ + k₄)
+        </div>
+        <div class="eq-parts">
+          <div class="eq-part"><span class="sym">peso k₁,k₄ = 1</span> Inclinações nas bordas — menos representativas</div>
+          <div class="eq-part"><span class="sym">peso k₂,k₃ = 2</span> Inclinações no meio — mais representativas do intervalo inteiro</div>
+          <div class="eq-part"><span class="sym">erro ∝ h⁵</span> Erro por passo cai 5 ordens com h — Euler cai apenas 2</div>
+        </div>
+      </div>
+
+      <!-- SIM 2: EULER vs RK4 -->
+      <div class="sim-card reveal">
+        <div class="sim-header">
+          <div class="sim-dot"></div>
+          <span class="sim-title">sim_02 — euler_vs_rk4.js</span>
+          <span class="sim-badge">interativo</span>
+        </div>
+        <div class="sim-body">
+          <div class="canvas-wrap" style="height:240px;">
+            <canvas id="rk4Canvas" style="height:240px;"></canvas>
+          </div>
+          <p class="sim-caption">Mesmo tamanho de passo h — compare os erros de Euler (laranja) e RK4 (verde-azulado).</p>
+          <div class="sim-controls">
+            <div class="ctrl-group">
+              <div class="ctrl-label">Passo h compartilhado <span id="hSharedVal">0.8</span></div>
+              <input type="range" id="hSharedSlider" min="0.1" max="2.2" step="0.1" value="0.8">
+            </div>
+            <div class="ctrl-group">
+              <div class="ctrl-label">Taxa de decaimento k <span id="kSharedVal">0.5</span></div>
+              <input type="range" id="kSharedSlider" min="0.1" max="1.5" step="0.1" value="0.5">
+            </div>
+          </div>
+          <div class="sim-stat">
+            <div class="stat-item"><span class="stat-l">Erro Euler (t=10)</span><span class="stat-v" id="errEuler2">—</span></div>
+            <div class="stat-item"><span class="stat-l">Erro RK4 (t=10)</span><span class="stat-v" id="errRk4">—</span></div>
+            <div class="stat-item"><span class="stat-l">RK4 é x vezes melhor</span><span class="stat-v" id="errRatio">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <table class="compare-table reveal">
+        <thead>
+          <tr>
+            <th>Método</th>
+            <th>Avaliações de f/passo</th>
+            <th>Erro por passo</th>
+            <th>Estabilidade</th>
+            <th>Uso em neurociência</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Euler</strong></td>
+            <td class="highlight">1</td>
+            <td class="bad">O(h²)</td>
+            <td class="bad">Restrita</td>
+            <td>Prototipagem rápida</td>
+          </tr>
+          <tr>
+            <td><strong>RK4</strong></td>
+            <td class="highlight">4</td>
+            <td class="good">O(h⁵)</td>
+            <td class="good">Ampla</td>
+            <td>Wilson-Cowan, integração temporal de campo</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── DIFERENÇAS FINITAS ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="df"></span>
+      <div class="section-label">03 — O Desafio Espacial</div>
+      <h2>Diferenças Finitas e o Laplaciano</h2>
+
+      <p>
+        Euler e RK4 resolvem o problema <em>temporal</em>: como a função muda ao longo 
+        do tempo. Mas a equação de difusão tem um componente <em>espacial</em> — 
+        o Laplaciano ∇². Para simular a propagação de atividade no tecido cortical 
+        precisamos calcular a segunda derivada <strong>numa grade discreta</strong>.
+      </p>
+
+      <p>
+        A ideia: no computador, o espaço não é contínuo — é uma lista de pontos separados 
+        por Δx. A segunda derivada num ponto <em>i</em> pode ser aproximada pelos seus 
+        dois vizinhos imediatos.
+      </p>
+
+      <div class="math-block reveal">
+        <div class="eq" style="font-size:17px;">∂²u/∂x² ≈ (u<sub>i+1</sub> − 2u<sub>i</sub> + u<sub>i−1</sub>) / Δx²</div>
+        <div class="eq-parts">
+          <div class="eq-part"><span class="sym">u<sub>i</sub></span> Valor no ponto central — o que queremos analisar</div>
+          <div class="eq-part"><span class="sym">u<sub>i±1</sub></span> Vizinhos imediatos — quem "puxa" o ponto central</div>
+          <div class="eq-part"><span class="sym">Δx</span> Espaçamento da grade — resolução espacial da simulação</div>
+        </div>
+      </div>
+
+      <div class="aside reveal">
+        <span class="aside-icon">🔍</span>
+        <div class="aside-title">A intuição geométrica do Laplaciano discreto</div>
+        <p>
+          A fórmula acima pode ser lida como: <em>"quanto u<sub>i</sub> difere da média 
+          dos seus vizinhos?"</em> — exatamente a definição intuitiva de curvatura.
+        </p>
+        <p>
+          Se u<sub>i</sub> for <strong>maior</strong> que seus vizinhos (pico), o resultado 
+          é negativo → a difusão vai espalhar energia para fora. Se for <strong>menor</strong> 
+          (vale), o resultado é positivo → energia flui para dentro. Se a atividade já 
+          está uniforme (rampa), o Laplaciano é zero → sem difusão.
+        </p>
+        <p>
+          Isso é exatamente o que a equação do calor de Fourier descrevia — agora 
+          discretizado numa grade de neurônios.
+        </p>
+      </div>
+
+      <h3>Vizinhança na Grade</h3>
+
+      <div class="neighbor-diagram reveal">
+        <div class="nd-cell">
+          <span class="nd-cell-sym">u<sub>i−1</sub></span>
+          <span class="nd-cell-label">vizinho esq.</span>
+        </div>
+        <span class="nd-arrow">→</span>
+        <div class="nd-cell center">
+          <span class="nd-cell-sym">u<sub>i</sub></span>
+          <span class="nd-cell-label">ponto central</span>
+        </div>
+        <span class="nd-arrow">←</span>
+        <div class="nd-cell">
+          <span class="nd-cell-sym">u<sub>i+1</sub></span>
+          <span class="nd-cell-label">vizinho dir.</span>
+        </div>
+      </div>
+      <p class="sim-caption" style="margin-top:-16px;">
+        O Laplaciano mede o quanto u<sub>i</sub> difere da média de seus vizinhos.
+        As setas indicam a direção do fluxo de difusão quando há diferença.
+      </p>
+
+      <!-- SIM 3: LAPLACIANO INTERATIVO -->
+      <div class="sim-card reveal">
+        <div class="sim-header">
+          <div class="sim-dot"></div>
+          <span class="sim-title">sim_03 — laplaciano_1d.js</span>
+          <span class="sim-badge">interativo</span>
+        </div>
+        <div class="sim-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div class="canvas-wrap" style="height:160px;">
+              <canvas id="laplUCanvas" style="height:160px;"></canvas>
+            </div>
+            <div class="canvas-wrap" style="height:160px;">
+              <canvas id="laplLCanvas" style="height:160px;"></canvas>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--text-muted);margin:4px 0 14px;">
+            <span>↑ Perfil de atividade u(x)</span>
+            <span>↑ Laplaciano ∂²u/∂x² (o que a difusão vai "corrigir")</span>
+          </div>
+          <div class="sim-controls">
+            <div class="ctrl-group">
+              <div class="ctrl-label">Forma do pulso</div>
+              <select id="pulseShape" style="font-family:var(--mono);font-size:12px;background:var(--bg-card);color:var(--text-dim);border:1px solid var(--border);border-radius:var(--radius);padding:6px 10px;width:100%;cursor:pointer;">
+                <option value="step">Degrau (pico duplo)</option>
+                <option value="single">Pico único (gaussiano)</option>
+                <option value="ramp">Rampa linear</option>
+                <option value="valley">Vale central</option>
+              </select>
+            </div>
+            <div class="ctrl-group">
+              <div class="ctrl-label">Espaçamento Δx <span id="dxVal">1.0</span></div>
+              <input type="range" id="dxSlider" min="0.5" max="3.0" step="0.25" value="1.0">
+            </div>
+          </div>
+          <div class="sim-stat">
+            <div class="stat-item"><span class="stat-l">Lapl. mínimo</span><span class="stat-v" id="laplMin">—</span></div>
+            <div class="stat-item"><span class="stat-l">Lapl. máximo</span><span class="stat-v" id="laplMax">—</span></div>
+            <div class="stat-item"><span class="stat-l">Pontos da grade</span><span class="stat-v" id="laplN">32</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="aside reveal">
+        <span class="aside-icon">🧠</span>
+        <div class="aside-title">Por que condições de contorno periódicas?</div>
+        <p>
+          No código do notebook, usamos <code>np.roll</code> para calcular os vizinhos — 
+          isso assume que as bordas da grade se conectam (periodicidade). Neste módulo 
+          essa escolha é didática: <strong>o modelo de borda importa menos que entender 
+          a dinâmica central</strong>.
+        </p>
+        <p>
+          No Módulo 4, quando simularmos o córtex visual real, usaremos condições de 
+          Neumann (fluxo zero na borda), mais realistas para tecido neural.
+        </p>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── INTEGRAÇÃO ESPAÇO-TEMPO ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="integracao"></span>
+      <div class="section-label">04 — A Síntese</div>
+      <h2>Integrando Espaço e Tempo</h2>
+
+      <p>
+        Temos agora as duas metades do problema: RK4 para o tempo, Diferenças Finitas 
+        para o espaço. A equação de difusão combina os dois:
+      </p>
+
+      <div class="math-block reveal">
+        <div class="eq">∂u/∂t = D · ∂²u/∂x²</div>
+        <div class="eq-parts">
+          <div class="eq-part"><span class="sym">RK4</span> Integra ∂u/∂t — avança no tempo</div>
+          <div class="eq-part"><span class="sym">Dif. Finitas</span> Calcula ∂²u/∂x² — avança no espaço</div>
+          <div class="eq-part"><span class="sym">D</span> Coeficiente de difusão — velocidade de espalhamento</div>
+        </div>
+      </div>
+
+      <p>
+        Mas há uma restrição fundamental: não podemos escolher Δt e Δx livremente. 
+        Existe um limite de estabilidade — o <strong>critério de von Neumann</strong>:
+      </p>
+
+      <div class="math-block reveal">
+        <div class="eq">Δt ≤ Δx² / (2D)</div>
+        <div class="eq-parts">
+          <div class="eq-part"><span class="sym">violação</span> Se Δt for maior que esse limite, a solução explode numericamente</div>
+          <div class="eq-part"><span class="sym">intuição</span> Em um passo de tempo, a informação não pode "viajar" mais que um Δx</div>
+        </div>
+      </div>
+
+      <!-- SIM 4: DIFUSÃO ESPAÇO-TEMPO -->
+      <div class="sim-card reveal">
+        <div class="sim-header">
+          <div class="sim-dot"></div>
+          <span class="sim-title">sim_04 — difusao_espacotempo.js</span>
+          <span class="sim-badge">interativo</span>
+        </div>
+        <div class="sim-body">
+          <div class="canvas-wrap" style="height:220px;">
+            <canvas id="pdeCanvas" style="height:220px;"></canvas>
+          </div>
+          <p class="sim-caption">Difusão 1D completa: RK4 no tempo + Diferenças Finitas no espaço. Aumente D para ver o espalhamento acelerar.</p>
+          <div class="sim-controls">
+            <div class="ctrl-group">
+              <div class="ctrl-label">Coef. de difusão D <span id="dPdeVal">0.3</span></div>
+              <input type="range" id="dPdeSlider" min="0.05" max="0.45" step="0.05" value="0.3">
+            </div>
+            <div class="ctrl-group">
+              <div class="ctrl-label">Largura do pulso inicial <span id="pulseWidthVal">4</span></div>
+              <input type="range" id="pulseWidthSlider" min="1" max="12" step="1" value="4">
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="primary" id="pdeReset">↺ Reiniciar</button>
+            <button id="pdePause">⏸ Pausar</button>
+          </div>
+          <div class="sim-stat">
+            <div class="stat-item"><span class="stat-l">Tempo (t)</span><span class="stat-v" id="pdeTime">0</span></div>
+            <div class="stat-item"><span class="stat-l">Δt usado</span><span class="stat-v" id="pdeDt">—</span></div>
+            <div class="stat-item"><span class="stat-l">Δt máx. (von N.)</span><span class="stat-v" id="pdeDtMax">—</span></div>
+            <div class="stat-item"><span class="stat-l">Estabilidade</span><span class="stat-v" id="pdeStability">✓</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── CÓDIGO ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="codigo"></span>
+      <div class="section-label">05 — Implementação</div>
+      <h2>Do Conceito ao Código</h2>
+
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">python — metodo_euler</span>
+          <button class="copy-btn">copiar</button>
+        </div>
+        <pre><code><span class="kw">def</span> <span class="fn">metodo_euler</span>(f, y0, t_span, h):
+    <span class="str">"""Resolve a EDO usando o Método de Euler."""</span>
+    t_start, t_end = t_span
+    t = np.<span class="fn">arange</span>(t_start, t_end + h, h)
+    y = np.<span class="fn">zeros</span>(<span class="fn">len</span>(t))
+    y[<span class="nm">0</span>] = y0
+
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(t) - <span class="nm">1</span>):
+        y[i+<span class="nm">1</span>] = y[i] + h * <span class="fn">f</span>(t[i], y[i])
+
+    <span class="kw">return</span> t, y</code></pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">python — metodo_rk4</span>
+          <button class="copy-btn">copiar</button>
+        </div>
+        <pre><code><span class="kw">def</span> <span class="fn">metodo_rk4</span>(f, y0, t_span, h):
+    <span class="str">"""Resolve a EDO usando Runge-Kutta de 4ª Ordem."""</span>
+    t_start, t_end = t_span
+    t = np.<span class="fn">arange</span>(t_start, t_end + h, h)
+    y = np.<span class="fn">zeros</span>(<span class="fn">len</span>(t))
+    y[<span class="nm">0</span>] = y0
+
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="fn">len</span>(t) - <span class="nm">1</span>):
+        k1 = <span class="fn">f</span>(t[i],       y[i])
+        k2 = <span class="fn">f</span>(t[i] + h/<span class="nm">2</span>, y[i] + h/<span class="nm">2</span> * k1)
+        k3 = <span class="fn">f</span>(t[i] + h/<span class="nm">2</span>, y[i] + h/<span class="nm">2</span> * k2)
+        k4 = <span class="fn">f</span>(t[i] + h,   y[i] + h     * k3)
+
+        y[i+<span class="nm">1</span>] = y[i] + (h/<span class="nm">6</span>) * (k1 + <span class="nm">2</span>*k2 + <span class="nm">2</span>*k3 + k4)
+
+    <span class="kw">return</span> t, y</code></pre>
+      </div>
+
+      <div class="code-block reveal">
+        <div class="code-header">
+          <span class="code-lang">python — laplaciano_1d</span>
+          <button class="copy-btn">copiar</button>
+        </div>
+        <pre><code><span class="kw">def</span> <span class="fn">laplaciano_1d</span>(u, dx=<span class="nm">1.0</span>):
+    <span class="str">"""Laplaciano 1D por Diferenças Finitas (contorno periódico).
+    
+    Nota: contorno periódico é didático — no Módulo 4 usaremos
+    condições de Neumann (fluxo zero) para o tecido cortical real.
+    """</span>
+    u_prev = np.<span class="fn">roll</span>(u, <span class="nm">1</span>)   <span class="cm"># u_{i-1}</span>
+    u_next = np.<span class="fn">roll</span>(u, -<span class="nm">1</span>)  <span class="cm"># u_{i+1}</span>
+
+    <span class="kw">return</span> (u_next - <span class="nm">2</span> * u + u_prev) / (dx**<span class="nm">2</span>)</code></pre>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── NOTEBOOK ── -->
+    <section class="section reveal">
+      <div class="notebook-bridge">
+        <div class="bridge-eyebrow">↳ Notebook Google Colab — Módulo 02</div>
+        <div class="bridge-title">Implemente você mesmo</div>
+        <p class="bridge-desc">
+          No notebook, você vai construir Euler e RK4 do zero, comparar os erros 
+          numericamente, implementar o Laplaciano e simular a equação de difusão 
+          completa com espaço e tempo acoplados.
+        </p>
+        <div class="bridge-features">
+          <div class="bridge-feature">Euler vs. RK4 com análise de erro</div>
+          <div class="bridge-feature">Instabilidade numérica na prática</div>
+          <div class="bridge-feature">Laplaciano 1D com NumPy</div>
+          <div class="bridge-feature">Difusão EDP completa (espaço + tempo)</div>
+          <div class="bridge-feature">Critério de von Neumann verificado</div>
+        </div>
+        <a href="https://colab.research.google.com/drive/1JgyYd8zdpU_N9CgV6uJb4NXxIGwQLNQh" class="btn-colab" target="_blank" rel="noopener">
+          <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+            <circle cx="16" cy="16" r="16" fill="#F9AB00"/>
+            <path d="M9 16c0-3.866 3.134-7 7-7s7 3.134 7 7-3.134 7-7 7-7-3.134-7-7z" fill="#0a0a0c"/>
+            <path d="M13 16c0-1.657 1.343-3 3-3s3 1.343 3 3-1.343 3-3 3-3-1.343-3-3z" fill="#F9AB00"/>
+          </svg>
+          Abrir no Google Colab
+        </a>
+        <p style="font-size:12px;color:var(--text-muted);margin-top:14px;margin-bottom:0;">
+          <code>https://colab.research.google.com/drive/1JgyYd8zdpU_N9CgV6uJb4NXxIGwQLNQh</code>
+        </p>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── ROADMAP ── -->
+    <section class="section reveal">
+      <div class="section-label">06 — Onde estamos</div>
+      <h2>Roteiro do Curso</h2>
+
+      <table class="roadmap">
+        <thead>
+          <tr><th>Módulo</th><th>Foco</th><th>Difusão presente como…</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="mod-badge">01</span></td>
+            <td><strong>Fundamentos da Difusão</strong><br>Movimento Browniano · MSD · Gaussiana</td>
+            <td>Base física — como moléculas se movem no tecido</td>
+          </tr>
+          <tr class="current">
+            <td><span class="mod-badge active">02 — Atual</span></td>
+            <td><strong>Métodos Numéricos</strong><br>Euler · RK4 · Diferenças Finitas</td>
+            <td>Implementação de ∂²/∂x² — como resolver a EDP na grade</td>
+          </tr>
+          <tr>
+            <td><span class="mod-badge">03</span></td>
+            <td><strong>Modelos de População</strong><br>Wilson-Cowan · Dinâmica E-I · Estabilidade</td>
+            <td>Ainda ausente — apenas dinâmica temporal local</td>
+          </tr>
+          <tr>
+            <td><span class="mod-badge">04</span></td>
+            <td><strong>Modelos de Campo</strong><br>Wilson-Cowan + Difusão · Córtex V1 · Isquemia</td>
+            <td>Termo espacial D∇²A — conectividade cortical completa</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="footer">
+      <div class="footer-left">
+        Neurociência Computacional<br>
+        Módulo 02 — Métodos Numéricos<br>
+        <a href="../index.html">← Início</a>
+      </div>
+      <a href="#" class="next-module">
+        <div>
+          <div class="nm-label">Próximo Módulo</div>
+          <div class="nm-title">03 — Modelos de População</div>
+        </div>
+        <span class="nm-arrow">→</span>
+      </a>
+    </div>
+  </footer>
+
+  <script src="../js/utils.js"></script>
+  <script>
+  // ══ SIM 1: EULER ══
+  (function () {
+    const canvas = document.getElementById('eulerCanvas');
+    const ctx = canvas.getContext('2d');
+    let h = 0.5, k = 0.5, Y0 = 10, T_END = 10;
+
+    function resize() {
+      canvas.width = canvas.offsetWidth * devicePixelRatio;
+      canvas.height = canvas.offsetHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+    resize();
+    window.addEventListener('resize', () => { resize(); draw(); });
+
+    function draw() {
+      const w = canvas.offsetWidth, ht = canvas.offsetHeight;
+      ctx.clearRect(0, 0, w, ht);
+
+      const steps = Math.ceil(T_END / h);
+      const yEuler = [Y0];
+      for (let i = 0; i < steps; i++) {
+        const last = yEuler[yEuler.length - 1];
+        yEuler.push(last + h * (-k * last));
+      }
+
+      const nAnal = 200;
+      const yAnal = Array.from({length: nAnal}, (_, i) => {
+        const t = (i / (nAnal - 1)) * T_END;
+        return Y0 * Math.exp(-k * t);
+      });
+
+      // clip range
+      const allY = [...yEuler, ...yAnal];
+      const yMin = Math.min(0, ...allY);
+      const yMax = Math.max(...allY);
+      const pad = (yMax - yMin) * 0.1 || 1;
+      const yLo = yMin - pad, yHi = yMax + pad;
+
+      function px(i, len) { return (i / (len - 1)) * w; }
+      function py(y) { return ht - ((y - yLo) / (yHi - yLo)) * ht * 0.9 - ht * 0.05; }
+
+      // analítica
+      ctx.beginPath();
+      yAnal.forEach((y, i) => { i === 0 ? ctx.moveTo(px(i, nAnal), py(y)) : ctx.lineTo(px(i, nAnal), py(y)); });
+      ctx.strokeStyle = 'rgba(232,228,220,0.55)'; ctx.lineWidth = 1.5; ctx.setLineDash([6, 4]); ctx.stroke(); ctx.setLineDash([]);
+
+      // euler
+      const unstable = yEuler.some(y => Math.abs(y) > 1000);
+      ctx.beginPath();
+      yEuler.forEach((y, i) => {
+        const yc = Math.max(-50, Math.min(50, y));
+        i === 0 ? ctx.moveTo(px(i, yEuler.length), py(yc)) : ctx.lineTo(px(i, yEuler.length), py(yc));
+      });
+      ctx.strokeStyle = unstable ? '#e05c5c' : '#f5a623'; ctx.lineWidth = 2; ctx.stroke();
+
+      // dots
+      if (!unstable && yEuler.length < 50) {
+        yEuler.forEach((y, i) => {
+          ctx.beginPath(); ctx.arc(px(i, yEuler.length), py(y), 3, 0, Math.PI * 2);
+          ctx.fillStyle = '#f5a623'; ctx.fill();
+        });
+      }
+
+      // stats
+      const errFinal = Math.abs(yEuler[steps] - Y0 * Math.exp(-k * T_END));
+      document.getElementById('eulerH').textContent = h.toFixed(1);
+      document.getElementById('eulerErr').textContent = unstable ? '∞' : errFinal.toFixed(4);
+      document.getElementById('eulerSteps').textContent = steps;
+      document.getElementById('eulerStatus').textContent = unstable ? '⚠ instável' : '✓ estável';
+    }
+
+    draw();
+
+    document.getElementById('hEulerSlider').addEventListener('input', function () {
+      h = parseFloat(this.value);
+      document.getElementById('hEulerVal').textContent = h.toFixed(1);
+      draw();
+    });
+    document.getElementById('kSlider').addEventListener('input', function () {
+      k = parseFloat(this.value);
+      document.getElementById('kVal').textContent = k.toFixed(1);
+      draw();
+    });
+  })();
+
+  // ══ SIM 2: EULER vs RK4 ══
+  (function () {
+    const canvas = document.getElementById('rk4Canvas');
+    const ctx = canvas.getContext('2d');
+    let h = 0.8, k = 0.5, Y0 = 10, T_END = 10;
+
+    function resize() {
+      canvas.width = canvas.offsetWidth * devicePixelRatio;
+      canvas.height = canvas.offsetHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+    resize();
+    window.addEventListener('resize', () => { resize(); draw(); });
+
+    function euler(h, k) {
+      const n = Math.ceil(T_END / h), y = [Y0];
+      for (let i = 0; i < n; i++) y.push(y[y.length-1] + h * (-k * y[y.length-1]));
+      return y;
+    }
+    function rk4(h, k) {
+      const n = Math.ceil(T_END / h), y = [Y0];
+      for (let i = 0; i < n; i++) {
+        const yi = y[y.length-1];
+        const k1 = -k * yi, k2 = -k * (yi + h/2*k1), k3 = -k * (yi + h/2*k2), k4 = -k * (yi + h*k3);
+        y.push(yi + (h/6)*(k1 + 2*k2 + 2*k3 + k4));
+      }
+      return y;
+    }
+
+    function draw() {
+      const w = canvas.offsetWidth, ht = canvas.offsetHeight;
+      ctx.clearRect(0, 0, w, ht);
+      const steps = Math.ceil(T_END / h);
+      const yE = euler(h, k), yR = rk4(h, k);
+      const nA = 200;
+      const yA = Array.from({length: nA}, (_, i) => Y0 * Math.exp(-k * (i/(nA-1))*T_END));
+
+      const yAll = [...yA, ...yE.filter(v => isFinite(v) && Math.abs(v) < 100), ...yR];
+      const yLo = Math.min(0, ...yAll) - 0.5, yHi = Math.max(...yAll) + 0.5;
+
+      function px(i, len) { return (i/(len-1))*w; }
+      function py(y) { return ht - ((Math.max(yLo, Math.min(yHi, y)) - yLo)/(yHi-yLo))*ht*0.9 - ht*0.05; }
+
+      // analítica
+      ctx.beginPath();
+      yA.forEach((y, i) => i === 0 ? ctx.moveTo(px(i,nA), py(y)) : ctx.lineTo(px(i,nA), py(y)));
+      ctx.strokeStyle='rgba(232,228,220,0.4)'; ctx.lineWidth=1.5; ctx.setLineDash([6,4]); ctx.stroke(); ctx.setLineDash([]);
+
+      // euler
+      const eulerUnstable = yE.some(y => Math.abs(y) > 500);
+      ctx.beginPath();
+      yE.forEach((y,i) => i===0 ? ctx.moveTo(px(i,yE.length), py(y)) : ctx.lineTo(px(i,yE.length), py(y)));
+      ctx.strokeStyle = eulerUnstable ? '#e05c5c' : '#f5a623'; ctx.lineWidth=2; ctx.stroke();
+
+      // rk4
+      ctx.beginPath();
+      yR.forEach((y,i) => i===0 ? ctx.moveTo(px(i,yR.length), py(y)) : ctx.lineTo(px(i,yR.length), py(y)));
+      ctx.strokeStyle='#4ecdc4'; ctx.lineWidth=2; ctx.stroke();
+
+      const analFinal = Y0 * Math.exp(-k*T_END);
+      const eE = Math.abs(yE[steps] - analFinal), eR = Math.abs(yR[steps] - analFinal);
+      document.getElementById('errEuler2').textContent = eulerUnstable ? '∞' : eE.toFixed(5);
+      document.getElementById('errRk4').textContent = eR.toExponential(2);
+      document.getElementById('errRatio').textContent = eE > 0 && isFinite(eE) ? (eE/Math.max(eR,1e-12)).toFixed(0)+'×' : '∞×';
+    }
+    draw();
+
+    document.getElementById('hSharedSlider').addEventListener('input', function() {
+      h = parseFloat(this.value); document.getElementById('hSharedVal').textContent = h.toFixed(1); draw();
+    });
+    document.getElementById('kSharedSlider').addEventListener('input', function() {
+      k = parseFloat(this.value); document.getElementById('kSharedVal').textContent = k.toFixed(1); draw();
+    });
+  })();
+
+  // ══ SIM 3: LAPLACIANO ══
+  (function () {
+    const cu = document.getElementById('laplUCanvas');
+    const cl = document.getElementById('laplLCanvas');
+    const ctxU = cu.getContext('2d');
+    const ctxL = cl.getContext('2d');
+    let N = 32, dx = 1.0, shape = 'step';
+
+    function resize() {
+      [cu, cl].forEach(c => {
+        c.width = c.offsetWidth * devicePixelRatio;
+        c.height = c.offsetHeight * devicePixelRatio;
+      });
+      ctxU.scale(devicePixelRatio, devicePixelRatio);
+      ctxL.scale(devicePixelRatio, devicePixelRatio);
+    }
+    resize();
+    window.addEventListener('resize', () => { resize(); draw(); });
+
+    function getU() {
+      const u = new Float32Array(N);
+      if (shape === 'step') {
+        for (let i = N/4; i < 3*N/4; i++) u[i] = 10;
+      } else if (shape === 'single') {
+        const c = N/2, s = N/8;
+        for (let i = 0; i < N; i++) u[i] = 10 * Math.exp(-0.5*((i-c)/s)**2);
+      } else if (shape === 'ramp') {
+        for (let i = 0; i < N; i++) u[i] = (i/N) * 10;
+      } else if (shape === 'valley') {
+        const c = N/2, s = N/6;
+        for (let i = 0; i < N; i++) u[i] = 10 * (1 - Math.exp(-0.5*((i-c)/s)**2));
+      }
+      return u;
+    }
+
+    function laplacian(u) {
+      const L = new Float32Array(N);
+      for (let i = 0; i < N; i++) {
+        const prev = u[(i-1+N)%N], next = u[(i+1)%N];
+        L[i] = (next - 2*u[i] + prev) / (dx*dx);
+      }
+      return L;
+    }
+
+    function drawLine(ctx, data, color, fill) {
+      const w = ctx.canvas.offsetWidth, h = ctx.canvas.offsetHeight;
+      ctx.clearRect(0,0,w,h);
+      const mn = Math.min(...data)-0.5, mx = Math.max(...data)+0.5;
+      const py = v => h - ((v-mn)/(mx-mn))*h*0.85 - h*0.08;
+      if (fill) {
+        const grad = ctx.createLinearGradient(0,0,0,h);
+        grad.addColorStop(0, color.replace(')',',0.2)').replace('rgb','rgba'));
+        grad.addColorStop(1, color.replace(')',',0)').replace('rgb','rgba'));
+        ctx.beginPath();
+        data.forEach((v,i) => { const x=(i/(N-1))*w; i===0?ctx.moveTo(x,py(v)):ctx.lineTo(x,py(v)); });
+        ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+        ctx.fillStyle='rgba(245,166,35,0.12)'; ctx.fill();
+      }
+      ctx.beginPath();
+      data.forEach((v,i) => { const x=(i/(N-1))*w; i===0?ctx.moveTo(x,py(v)):ctx.lineTo(x,py(v)); });
+      ctx.strokeStyle=color; ctx.lineWidth=2; ctx.stroke();
+    }
+
+    function draw() {
+      const u = getU();
+      const L = laplacian(u);
+      drawLine(ctxU, u, '#f5a623', true);
+      drawLine(ctxL, L, '#4ecdc4', false);
+      document.getElementById('laplMin').textContent = Math.min(...L).toFixed(2);
+      document.getElementById('laplMax').textContent = Math.max(...L).toFixed(2);
+      document.getElementById('laplN').textContent = N;
+    }
+    draw();
+
+    document.getElementById('pulseShape').addEventListener('change', function() { shape=this.value; draw(); });
+    document.getElementById('dxSlider').addEventListener('input', function() {
+      dx=parseFloat(this.value); document.getElementById('dxVal').textContent=dx.toFixed(2); draw();
+    });
+  })();
+
+  // ══ SIM 4: DIFUSÃO EDP ══
+  (function () {
+    const canvas = document.getElementById('pdeCanvas');
+    const ctx = canvas.getContext('2d');
+    let N = 80, D = 0.3, dx = 1.0, pw = 4;
+    let u, t, paused = false, animId;
+
+    function resize() {
+      canvas.width = canvas.offsetWidth * devicePixelRatio;
+      canvas.height = canvas.offsetHeight * devicePixelRatio;
+      ctx.scale(devicePixelRatio, devicePixelRatio);
+    }
+    resize();
+    window.addEventListener('resize', () => { resize(); draw(); });
+
+    function getDt() { return Math.min(dx*dx/(2.2*D), 0.4); }
+
+    function init() {
+      u = new Float32Array(N);
+      const c = Math.floor(N/2);
+      for (let i = c - pw; i <= c + pw; i++) if (i >= 0 && i < N) u[i] = 10;
+      t = 0;
+    }
+    init();
+
+    function step() {
+      const dt = getDt();
+      const nu = new Float32Array(N);
+      for (let i = 1; i < N-1; i++) {
+        nu[i] = u[i] + D * dt / (dx*dx) * (u[i+1] - 2*u[i] + u[i-1]);
+      }
+      nu[0] = nu[1]; nu[N-1] = nu[N-2];
+      u = nu; t += dt;
+    }
+
+    function draw() {
+      const w = canvas.offsetWidth, h = canvas.offsetHeight;
+      ctx.clearRect(0,0,w,h);
+      const yMax = 11;
+      const grad = ctx.createLinearGradient(0,0,0,h);
+      grad.addColorStop(0,'rgba(245,166,35,0.22)');
+      grad.addColorStop(1,'rgba(245,166,35,0)');
+      ctx.beginPath();
+      u.forEach((v,i) => { const px=(i/(N-1))*w, py=h-(v/yMax)*(h-20)-10; i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+      ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+      ctx.fillStyle=grad; ctx.fill();
+      ctx.beginPath();
+      u.forEach((v,i) => { const px=(i/(N-1))*w, py=h-(v/yMax)*(h-20)-10; i===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+      ctx.strokeStyle='#f5a623'; ctx.lineWidth=2; ctx.stroke();
+      const dt = getDt();
+      const dtMax = dx*dx/(2*D);
+      document.getElementById('pdeTime').textContent = t.toFixed(1);
+      document.getElementById('pdeDt').textContent = dt.toFixed(3);
+      document.getElementById('pdeDtMax').textContent = dtMax.toFixed(3);
+      document.getElementById('pdeStability').textContent = dt <= dtMax ? '✓ ok' : '⚠ viola';
+    }
+
+    function loop() {
+      if (!paused) { for (let i=0;i<4;i++) step(); }
+      draw();
+      animId = requestAnimationFrame(loop);
+    }
+    loop();
+
+    document.getElementById('dPdeSlider').addEventListener('input', function() {
+      D=parseFloat(this.value); document.getElementById('dPdeVal').textContent=D.toFixed(2); init();
+    });
+    document.getElementById('pulseWidthSlider').addEventListener('input', function() {
+      pw=parseInt(this.value); document.getElementById('pulseWidthVal').textContent=pw; init();
+    });
+    document.getElementById('pdeReset').addEventListener('click', init);
+    document.getElementById('pdePause').addEventListener('click', function() {
+      paused=!paused; this.textContent=paused?'▶ Continuar':'⏸ Pausar';
+    });
+  })();
+  </script>
+</body>
+</html>
