@@ -22,32 +22,25 @@
     .pipe-current { border-color: var(--border-accent); }
     .pipe-current .pipe-num { opacity: 1; }
 
-    /* connectivity grid */
-    .connectivity-grid {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      grid-template-rows: auto auto auto;
-      gap: 8px;
-      align-items: center;
-      justify-items: center;
-      margin: 28px 0;
-      max-width: 420px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .conn-pop {
-      background: var(--bg-card);
-      border: 1px solid var(--border-accent);
-      border-radius: var(--radius);
-      padding: 16px 24px;
-      text-align: center;
-      min-width: 100px;
-    }
-    .conn-pop-label { font-family: var(--mono); font-size: 18px; color: var(--amber); margin-bottom: 4px; }
-    .conn-pop-desc { font-size: 11px; color: var(--text-muted); font-family: var(--mono); }
-    .conn-arrow { font-family: var(--mono); font-size: 12px; color: var(--text-dim); text-align: center; line-height: 1.4; }
-    .conn-arrow.excit { color: #a3d977; }
-    .conn-arrow.inhib { color: #e05c5c; }
+    /* circuito E-I: diagrama SVG + matriz lado a lado */
+    .wc-circuit { display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; align-items: center; margin: 28px 0; }
+    @media (max-width: 700px) { .wc-circuit { grid-template-columns: 1fr; } }
+    .wc-circuit-svg { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+    .wc-circuit-svg svg { display: block; width: 100%; height: auto; }
+
+    .wc-matrix { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+    .wc-matrix-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 14px; text-align: center; }
+    .wc-matrix-grid { display: grid; grid-template-columns: auto 1fr 1fr; gap: 6px; align-items: center; }
+    .wc-mh { font-family: var(--mono); font-size: 10px; color: var(--text-muted); text-align: center; }
+    .wc-mh-row { font-family: var(--mono); font-size: 10px; color: var(--text-muted); text-align: right; padding-right: 6px; white-space: nowrap; }
+    .wc-cell { font-family: var(--mono); font-size: 14px; text-align: center; padding: 12px 6px; border-radius: var(--radius); border: 1px solid var(--border); }
+    .wc-cell.exc { color: #a3d977; border-color: rgba(163,217,119,0.35); background: rgba(163,217,119,0.06); }
+    .wc-cell.inh { color: #e05c5c; border-color: rgba(224,92,92,0.35); background: rgba(224,92,92,0.06); }
+    .wc-matrix-note { font-size: 11px; color: var(--text-dim); line-height: 1.5; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+    /* plano de fase + série temporal lado a lado */
+    .phase-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: start; }
+    @media (max-width: 700px) { .phase-pair { grid-template-columns: 1fr; } }
 
     /* regime cards */
     .regime-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 28px 0; }
@@ -115,8 +108,8 @@
     <div class="header-noise"></div>
     <div class="header-inner">
       <div class="module-tag">Módulo 03 — Neurociência Computacional</div>
-      <h1>Populações Neurais<br><em>e o Balanço que as Governa</em></h1>
-      <p class="header-lead">Do neurônio individual à dinâmica coletiva — o modelo que conecta métodos numéricos ao córtex visual.</p>
+      <h1>Populações Neurais<br><em>e a Dinâmica Excitação-Inibição</em></h1>
+      <p class="header-lead">O modelo que descreve milhares de neurônios com duas variáveis — e conecta os métodos numéricos do Módulo 02 ao córtex visual.</p>
       <div class="header-meta">
         <div class="meta-item">
           <span class="meta-label">Conceito Central</span>
@@ -145,7 +138,7 @@
     <section class="section reveal">
       <span class="section-anchor" id="motivacao"></span>
       <div class="section-label">00 — Por que estamos aqui</div>
-      <h2>A Pergunta que o Módulo 2 Deixou em Aberto</h2>
+      <h2>O Que a Difusão Está Espalhando</h2>
 
       <p>O módulo 02 terminou com a equação de difusão completa — espaço e tempo acoplados, critério de von Neumann, RK4 avançando o perfil de atividade por uma grade. Mas nenhuma palavra foi dita sobre o que esse perfil representa biologicamente.</p>
 
@@ -187,32 +180,113 @@
     <!-- ── 01 — FUNÇÃO DE ATIVAÇÃO ── -->
     <section class="section reveal">
       <span class="section-anchor" id="funcao-ativacao"></span>
-      <div class="section-label">01 — A Peça Fundamental</div>
-      <h2>Função de Ativação: Do Input à Taxa de Disparo</h2>
+      <div class="section-label">01 — A Função de Ativação</div>
+      <h2>A Função de Ativação</h2>
 
-      <p>Para modelar uma população de neurônios, precisamos de uma função que converta o input sináptico total recebido em taxa de disparo média. Essa função deve ter três propriedades biológicas: (1) abaixo de um limiar θ, a população quase não dispara; (2) acima de um nível de saturação, o período refratário limita a taxa máxima; (3) entre os dois, há uma zona de sensibilidade controlada pelo ganho <code>a</code>. A curva sigmoidal captura tudo isso.</p>
+      <p>Uma população de neurônios recebe input sináptico e responde disparando. Precisamos de uma função que faça essa conversão: entra o input total <code>I</code>, sai a taxa de disparo média da população. E essa função não é uma reta.</p>
+
+      <p>A razão é mecânica. Cada neurônio da população tem seu <strong>próprio</strong> limiar de disparo, ligeiramente diferente do vizinho. Com input baixo, praticamente nenhum neurônio alcança o próprio limiar, e a população fica quase muda. Conforme o input cresce, uma fração cada vez maior da população cruza seu limiar individual — e a taxa média sobe rápido. Quando quase todos já estão disparando, o <strong>período refratário</strong> entra em cena: cada neurônio precisa de um intervalo mínimo entre disparos, então existe um teto físico de disparos por segundo. A curva achata.</p>
+
+      <p>Ou seja: a curva que procuramos é, essencialmente, a <strong>distribuição acumulada</strong> dos limiares individuais da população — e é por isso que ela tem forma de S. Três propriedades resumem o que ela precisa ter:</p>
+
+      <div class="observations-list">
+        <div class="bridge-feature"><strong>1.</strong> Abaixo de um limiar θ, a população quase não dispara — poucos neurônios cruzaram o próprio limiar</div>
+        <div class="bridge-feature"><strong>2.</strong> Acima de um certo ponto, a taxa satura — o período refratário impõe um teto de disparos por segundo</div>
+        <div class="bridge-feature"><strong>3.</strong> No meio, uma zona de sensibilidade, onde pequenas mudanças de input geram mudanças grandes na taxa de disparo</div>
+      </div>
+
+      <h3>Primeiro, a sigmoide no estado puro</h3>
+
+      <p>A curva com essa forma já existe em matemática, muito antes de qualquer neurônio: é a <strong>função logística</strong>, ou sigmoide. Na versão mais nua possível, ela é só isto:</p>
+
+      <div class="math-block">
+        <div class="eq">σ(x) = 1 / (1 + e<sup>−x</sup>)</div>
+        <div class="eq-parts">
+          <div class="eq-part"><span class="sym">x → −∞</span> σ tende a 0</div>
+          <div class="eq-part"><span class="sym">x → +∞</span> σ tende a 1</div>
+          <div class="eq-part"><span class="sym">x = 0</span> σ vale exatamente 0.5 — é o ponto médio, e onde a curva é mais íngreme</div>
+        </div>
+      </div>
+
+      <p>Nessa forma pura ela não tem controle nenhum: a virada acontece sempre em x=0, sempre com a mesma inclinação. Para usá-la, precisamos de dois ajustes — e ambos são feitos trocando o que entra no lugar do <code>x</code>:</p>
+
+      <div class="math-block">
+        <div class="eq">σ(a(I − θ)) = 1 / (1 + e<sup>−a(I−θ)</sup>)</div>
+        <div class="eq-parts">
+          <div class="eq-part"><span class="sym">θ</span> Desloca a virada: em vez de acontecer em 0, acontece em I = θ</div>
+          <div class="eq-part"><span class="sym">a</span> Controla a inclinação: <code>a</code> alto deixa a virada quase um degrau; <code>a</code> baixo espalha a transição</div>
+        </div>
+      </div>
+
+      <!-- SIM_01 — SIGMOIDE PURA -->
+      <div class="sim-card reveal">
+        <div class="sim-header">
+          <div class="sim-dot"></div>
+          <span class="sim-title">sim_01 — sigmoidePura.js</span>
+          <span class="sim-badge">interativo</span>
+        </div>
+        <div class="sim-body">
+          <div class="canvas-wrap" style="height:200px;">
+            <canvas id="sigmoidePuraCanvas" style="height:200px;" role="img" aria-label="Curva sigmoide pura, com controles de ganho e limiar"></canvas>
+          </div>
+          <p class="sim-caption">A sigmoide sozinha, ainda sem nenhuma adaptação biológica. Repare onde ela cruza o eixo vertical em I = 0.</p>
+          <div class="sim-controls">
+            <div class="ctrl-group">
+              <div class="ctrl-label">Ganho a <span id="spGainVal">1.20</span></div>
+              <input type="range" id="spGainSlider" min="0.3" max="3.0" step="0.1" value="1.2" aria-label="Ganho a da sigmoide pura">
+            </div>
+            <div class="ctrl-group">
+              <div class="ctrl-label">Limiar θ <span id="spThetaVal">2.80</span></div>
+              <input type="range" id="spThetaSlider" min="0.5" max="5.0" step="0.1" value="2.8" aria-label="Limiar theta da sigmoide pura">
+            </div>
+          </div>
+          <div class="sim-stat">
+            <div class="stat-item">
+              <span class="stat-l">σ em I = 0</span>
+              <span class="stat-v" id="spAtZero">—</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-l">σ em I = θ</span>
+              <span class="stat-v" id="spAtTheta">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3>O que precisa mudar para o nosso modelo</h3>
+
+      <p>Olhe o valor de <code>σ</code> em I = 0 na simulação acima: ele não é zero. Com os valores padrão, sobra algo em torno de 0.03. E isso é um problema biológico concreto: significaria que a população continua disparando <strong>mesmo sem receber input nenhum</strong>. Não é o que queremos — sem estímulo, a taxa tem que ser zero.</p>
+
+      <p>Quanto exatamente sobra? Basta avaliar a fórmula em I = 0. O expoente <code>−a(I−θ)</code> vira <code>−a(0−θ) = aθ</code>, então:</p>
+
+      <div class="math-block">
+        <div class="eq">σ(a(0 − θ)) = 1 / (1 + e<sup>aθ</sup>)</div>
+        <div class="eq-label">Esse é o resíduo — uma constante que depende só de <code>a</code> e θ, e não de I.</div>
+      </div>
+
+      <p>Como é uma constante, a correção é direta: subtraia exatamente esse valor da curva inteira. É essa — e só essa — a diferença entre a sigmoide de livro-texto e a função de ativação que Wilson e Cowan usam:</p>
 
       <div class="math-block">
         <div class="eq">F(I) = 1/(1 + e<sup>−a(I−θ)</sup>) − 1/(1 + e<sup>aθ</sup>)</div>
         <div class="eq-parts">
-          <div class="eq-part"><span class="sym">F(I)</span> Taxa de disparo média da população, normalizada em [0, 1]</div>
-          <div class="eq-part"><span class="sym">a</span> Ganho — controla a inclinação da curva na zona de sensibilidade</div>
-          <div class="eq-part"><span class="sym">θ</span> Limiar — o input em que a curva tem sua maior taxa de mudança</div>
-          <div class="eq-part"><span class="sym">−1/(1+e<sup>aθ</sup>)</span> Garante que F(0) = 0: sem input, sem disparo</div>
+          <div class="eq-part"><span class="sym">F(I)</span> Taxa de disparo média da população</div>
+          <div class="eq-part"><span class="sym">1º termo</span> A sigmoide parametrizada que acabamos de montar</div>
+          <div class="eq-part"><span class="sym">2º termo</span> O resíduo constante, subtraído para ancorar F(0) = 0</div>
         </div>
       </div>
 
       <div class="aside">
         <span class="aside-icon">♦️</span>
-        <div class="aside-title">Por que subtrair o segundo termo?</div>
-        <p>Sem o segundo termo, F(0) ≠ 0 — a população dispararia mesmo sem input. O segundo termo desloca a curva para que o ponto de repouso (sem input) seja exatamente zero. Biologicamente: sem estimulação, a taxa de disparo espontânea é mínima.</p>
+        <div class="aside-title">A correção é exata, não aproximada</div>
+        <p>O segundo termo não foi escolhido por tentativa e erro: ele é, por construção, <strong>idêntico</strong> ao valor que o primeiro termo assume em I = 0. Por isso <code>F(0) = 0</code> exatamente, para qualquer <code>a</code> e θ que você escolher — não é uma aproximação que funciona só em certos valores.</p>
+        <p>Uma consequência secundária: como a curva inteira desceu um pouquinho, a saturação no topo também não chega mais a 1 — ela para em <code>1 − resíduo</code>. Com a = 1.2 e θ = 2.8, isso dá ≈ 0.966. Compare os dois simuladores e veja a curva inteira deslizar para baixo.</p>
       </div>
 
-      <!-- SIM_01 -->
+      <!-- SIM_02 — CURVA F-I CORRIGIDA -->
       <div class="sim-card reveal">
         <div class="sim-header">
           <div class="sim-dot"></div>
-          <span class="sim-title">sim_01 — curvaFI.js</span>
+          <span class="sim-title">sim_02 — curvaFI.js</span>
           <span class="sim-badge">interativo</span>
         </div>
         <div class="sim-body">
@@ -250,18 +324,6 @@
         </div>
       </div>
 
-      <div class="code-block">
-        <div class="code-header">
-          <span class="code-lang">python — funcao_ativacao</span>
-          <button class="copy-btn">copiar</button>
-        </div>
-        <pre><code><span class="kw">import</span> numpy <span class="kw">as</span> np
-
-<span class="kw">def</span> <span class="fn">F</span>(I, a, theta):
-    <span class="cm">"""Função de ativação sigmoidal corrigida: F(0) = 0."""</span>
-    <span class="kw">return</span> (<span class="nm">1</span> / (<span class="nm">1</span> + np.<span class="fn">exp</span>(-a * (I - theta))) \
-         - (<span class="nm">1</span> / (<span class="nm">1</span> + np.<span class="fn">exp</span>(a * theta)))</code></pre>
-      </div>
     </section>
 
     <hr class="divider">
@@ -269,10 +331,10 @@
     <!-- ── 02 — WILSON-COWAN ── -->
     <section class="section reveal">
       <span class="section-anchor" id="wilson-cowan"></span>
-      <div class="section-label">02 — O Sistema Central</div>
-      <h2>Wilson-Cowan: Excitação e Inibição em Equilíbrio</h2>
+      <div class="section-label">02 — O Modelo</div>
+      <h2>As Equações de Wilson-Cowan</h2>
 
-      <p>Imagine dois grupos de pessoas numa reunião: um grupo que amplifica ideias (excitatório, E) e outro que pondera e freia (inibitório, I). O comportamento coletivo emerge da tensão dinâmica entre eles. O modelo Wilson-Cowan (1972) formaliza exatamente isso para populações neurais: duas variáveis acopladas, <code>r_E</code> e <code>r_I</code>, cada uma com sua própria constante de tempo τ, conectadas por quatro pesos sinápticos.</p>
+      <p>O córtex não tem um tipo só de neurônio. Cerca de 80% são <strong>excitatórios</strong> — quando disparam, aumentam a chance de seus alvos dispararem. Os outros 20% são <strong>inibitórios</strong> — quando disparam, reduzem essa chance. Wilson e Cowan (1972) perceberam que dá para descrever uma região cortical inteira acompanhando apenas duas taxas médias: <code>r_E</code>, da população excitatória, e <code>r_I</code>, da inibitória. Cada uma tem sua própria constante de tempo τ, e as duas se influenciam por quatro pesos sinápticos.</p>
 
       <div class="aside">
         <span class="aside-icon">🧠</span>
@@ -293,43 +355,76 @@
         </div>
       </div>
 
-      <p>Os quatro pesos sinápticos formam a <strong>matriz de conectividade</strong> que governa toda a dinâmica do sistema:</p>
+      <p>Os quatro pesos formam a <strong>matriz de conectividade</strong>, e é ela que governa toda a dinâmica: <code>w_EE</code> mede o quanto a população excitatória se realimenta; <code>w_EI</code>, o quanto a inibição segura a excitação; <code>w_IE</code>, o quanto a excitação recruta a inibição; e <code>w_II</code>, o quanto os inibitórios inibem uns aos outros. Cada peso é uma seta no circuito, e cada seta é uma célula da matriz:</p>
 
-      <div class="connectivity-grid">
-        <div class="conn-pop">
-          <div class="conn-pop-label">E</div>
-          <div class="conn-pop-desc">excitatória</div>
-        </div>
-        <div class="conn-arrow" style="grid-column:2;grid-row:1;">
-          <div class="excit">w_EE →</div>
-          <div style="font-size:10px;color:var(--text-muted);">auto-excitação</div>
-          <div class="excit">← w_EE</div>
-        </div>
-        <div class="conn-pop">
-          <div class="conn-pop-label">I</div>
-          <div class="conn-pop-desc">inibitória</div>
+      <div class="wc-circuit">
+        <div class="wc-circuit-svg">
+          <svg viewBox="0 0 360 230" role="img" aria-label="Circuito das populações excitatória e inibitória, com auto-conexões e conexões cruzadas">
+            <defs>
+              <marker id="arrowExc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#a3d977"/>
+              </marker>
+              <marker id="barInh" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+                <path d="M 6 0 L 6 10" stroke="#e05c5c" stroke-width="2.5" fill="none"/>
+              </marker>
+            </defs>
+
+            <!-- auto-excitação de E -->
+            <path d="M 72,96 C 48,38 142,38 118,96" fill="none" stroke="#a3d977" stroke-width="2" marker-end="url(#arrowExc)"/>
+            <text x="95" y="30" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#a3d977">w_EE</text>
+
+            <!-- auto-inibição de I -->
+            <path d="M 242,96 C 218,38 312,38 288,96" fill="none" stroke="#e05c5c" stroke-width="2" marker-end="url(#barInh)"/>
+            <text x="265" y="30" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#e05c5c">w_II</text>
+
+            <!-- E excita I -->
+            <path d="M 129,103 Q 180,78 231,103" fill="none" stroke="#a3d977" stroke-width="2" marker-end="url(#arrowExc)"/>
+            <text x="180" y="72" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#a3d977">w_IE</text>
+
+            <!-- I inibe E -->
+            <path d="M 231,136 Q 180,161 129,136" fill="none" stroke="#e05c5c" stroke-width="2" marker-end="url(#barInh)"/>
+            <text x="180" y="180" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="12" fill="#e05c5c">w_EI</text>
+
+            <!-- nós -->
+            <circle cx="95" cy="118" r="32" fill="#161618" stroke="#a3d977" stroke-width="2"/>
+            <text x="95" y="126" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="22" fill="#a3d977">E</text>
+            <text x="95" y="212" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="rgba(232,228,220,0.55)">excitatória</text>
+
+            <circle cx="265" cy="118" r="32" fill="#161618" stroke="#e05c5c" stroke-width="2"/>
+            <text x="265" y="126" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="22" fill="#e05c5c">I</text>
+            <text x="265" y="212" text-anchor="middle" font-family="IBM Plex Mono, monospace" font-size="10" fill="rgba(232,228,220,0.55)">inibitória</text>
+          </svg>
+          <p style="font-family:var(--mono);font-size:10px;color:var(--text-muted);text-align:center;margin:10px 0 0;">
+            ponta de seta = excitatório &nbsp;·&nbsp; barra em T = inibitório
+          </p>
         </div>
 
-        <div class="conn-arrow excit" style="grid-column:1;grid-row:2;writing-mode:horizontal-tb;">
-          w_IE ↓<br><span style="font-size:10px;color:var(--text-muted);">recrutamento inibitório</span>
-        </div>
-        <div style="grid-column:2;grid-row:2;"></div>
-        <div class="conn-arrow inhib" style="grid-column:3;grid-row:2;">
-          w_II ↓<br><span style="font-size:10px;color:var(--text-muted);">auto-inibição</span>
-        </div>
+        <div class="wc-matrix">
+          <div class="wc-matrix-title">Matriz de conectividade</div>
+          <div class="wc-matrix-grid">
+            <div></div>
+            <div class="wc-mh">de E</div>
+            <div class="wc-mh">de I</div>
 
-        <div style="grid-column:1;grid-row:3;display:flex;align-items:center;justify-content:center;">
-          <div class="conn-arrow inhib">↑ w_EI<br><span style="font-size:10px;color:var(--text-muted);">inibição feedforward</span></div>
+            <div class="wc-mh-row">para E</div>
+            <div class="wc-cell exc">+w<sub>EE</sub></div>
+            <div class="wc-cell inh">−w<sub>EI</sub></div>
+
+            <div class="wc-mh-row">para I</div>
+            <div class="wc-cell exc">+w<sub>IE</sub></div>
+            <div class="wc-cell inh">−w<sub>II</sub></div>
+          </div>
+          <div class="wc-matrix-note">
+            Repare que o sinal é propriedade da <strong>coluna</strong>, não do peso: tudo que sai de E entra somando, tudo que sai de I entra subtraindo. A linha diz quem recebe. Com N populações em vez de 2, essa mesma tabela vira N×N — é assim que ela cresce quando o córtex ganha espaço, no Módulo 04.
+          </div>
         </div>
-        <div style="grid-column:2;grid-row:3;"></div>
-        <div style="grid-column:3;grid-row:3;"></div>
       </div>
 
       <!-- SIM_02 -->
       <div class="sim-card reveal">
         <div class="sim-header">
           <div class="sim-dot"></div>
-          <span class="sim-title">sim_02 — wilsonCowanTemporal.js</span>
+          <span class="sim-title">sim_03 — wilsonCowanTemporal.js</span>
           <span class="sim-badge">interativo</span>
         </div>
         <div class="sim-body">
@@ -391,38 +486,6 @@
         <p>Tente ajustar: <strong>w_II = 3.0</strong> e <strong>I_ext_E = 1.25</strong>. Observe o que acontece com o comportamento. Depois, mova I_ext_E para 0.5 e veja o sistema retornar ao ponto fixo. Você acabou de cruzar uma bifurcação de Hopf — a próxima seção explica o que isso significa.</p>
       </div>
 
-      <div class="code-block">
-        <div class="code-header">
-          <span class="code-lang">python — wilson_cowan_rk4</span>
-          <button class="copy-btn">copiar</button>
-        </div>
-        <pre><code><span class="kw">class</span> <span class="fn">WilsonCowanRK4</span>:
-    <span class="kw">def</span> <span class="fn">__init__</span>(self, params):
-        self.p = params
-        self.rE = <span class="nm">0.1</span>
-        self.rI = <span class="nm">0.1</span>
-
-    <span class="kw">def</span> <span class="fn">F</span>(self, I, a, theta):
-        <span class="kw">return</span> <span class="nm">1</span>/(<span class="nm">1</span> + np.<span class="fn">exp</span>(-a*(I - theta))) - <span class="nm">1</span>/(<span class="nm">1</span> + np.<span class="fn">exp</span>(a*theta))
-
-    <span class="kw">def</span> <span class="fn">derivatives</span>(self, rE, rI):
-        p = self.p
-        IE = p[<span class="str">'wEE'</span>]*rE - p[<span class="str">'wEI'</span>]*rI + p[<span class="str">'Ie'</span>]
-        II = p[<span class="str">'wIE'</span>]*rE - p[<span class="str">'wII'</span>]*rI + p[<span class="str">'Ii'</span>]
-        drE = (-rE + self.<span class="fn">F</span>(IE, p[<span class="str">'aE'</span>], p[<span class="str">'thE'</span>])) / p[<span class="str">'tauE'</span>]
-        drI = (-rI + self.<span class="fn">F</span>(II, p[<span class="str">'aI'</span>], p[<span class="str">'thI'</span>])) / p[<span class="str">'tauI'</span>]
-        <span class="kw">return</span> drE, drI
-
-    <span class="kw">def</span> <span class="fn">step_rk4</span>(self, dt=<span class="nm">0.1</span>):
-        k1e, k1i = self.<span class="fn">derivatives</span>(self.rE,            self.rI)
-        k2e, k2i = self.<span class="fn">derivatives</span>(self.rE + dt/<span class="nm">2</span>*k1e, self.rI + dt/<span class="nm">2</span>*k1i)
-        k3e, k3i = self.<span class="fn">derivatives</span>(self.rE + dt/<span class="nm">2</span>*k2e, self.rI + dt/<span class="nm">2</span>*k2i)
-        k4e, k4i = self.<span class="fn">derivatives</span>(self.rE + dt*k3e,    self.rI + dt*k3i)
-        self.rE += (dt/<span class="nm">6</span>) * (k1e + <span class="nm">2</span>*k2e + <span class="nm">2</span>*k3e + k4e)
-        self.rI += (dt/<span class="nm">6</span>) * (k1i + <span class="nm">2</span>*k2i + <span class="nm">2</span>*k3i + k4i)
-        self.rE = np.<span class="fn">clip</span>(self.rE, <span class="nm">0</span>, <span class="nm">1</span>)
-        self.rI = np.<span class="fn">clip</span>(self.rI, <span class="nm">0</span>, <span class="nm">1</span>)</code></pre>
-      </div>
     </section>
 
     <hr class="divider">
@@ -458,7 +521,7 @@
       <div class="sim-card reveal">
         <div class="sim-header">
           <div class="sim-dot"></div>
-          <span class="sim-title">sim_03 — planoDeFase.js</span>
+          <span class="sim-title">sim_04 — planoDeFase.js</span>
           <span class="sim-badge">interativo</span>
         </div>
         <div class="sim-body">
@@ -523,7 +586,7 @@
       <div class="sim-card reveal">
         <div class="sim-header">
           <div class="sim-dot"></div>
-          <span class="sim-title">sim_04 — diagramaBifurcacao.js</span>
+          <span class="sim-title">sim_05 — diagramaBifurcacao.js</span>
           <span class="sim-badge">cálculo pesado</span>
         </div>
         <div class="sim-body">
@@ -567,14 +630,81 @@
           <div class="bif-region-desc">Saturação. O excesso de excitação elimina as oscilações — a população dispara no máximo continuamente.</div>
         </div>
       </div>
+
+      <div class="aside">
+        <span class="aside-icon">🩸</span>
+        <div class="aside-title">Isso não é só matemática de parâmetro — é isquemia</div>
+        <p>Até agora giramos I_ext livremente pra "descobrir" os três regimes. Mas no córtex de verdade ninguém gira esse botão — I_ext é sustentado pelo fluxo sanguíneo trazendo oxigênio e glicose até a população, pela mesma rede capilar cuja difusão vimos na Escala 02 do Módulo 01.</p>
+        <p>Isso significa que o diagrama acima também pode ser lido da direita para a esquerda, como o filme de uma isquemia progredindo: conforme o suprimento metabólico despenca, I_ext cai junto, e a população atravessa as mesmas fronteiras na ordem inversa — sai da saturação, entra no ciclo limite (oscilando cada vez mais devagar), e finalmente cruza de volta para o <strong>ponto fixo de baixa atividade</strong> em I &lt; 0.57. Esse ponto fixo não é "repouso" — é o destino de uma população depois que a falência metabólica cruzou a bifurcação.</p>
+      </div>
     </section>
 
     <hr class="divider">
 
-    <!-- ── 05 — IMPLEMENTAÇÃO ── -->
+    <!-- ── 05 — DO PONTO À GRADE ── -->
+    <section class="section reveal">
+      <span class="section-anchor" id="ponto-a-grade"></span>
+      <div class="section-label">05 — Preparando o Salto</div>
+      <h2>Um Ponto Não Faz um Córtex</h2>
+
+      <p>Tudo o que construímos até aqui — a função de ativação, as equações acopladas, o plano de fase, a bifurcação — descreve <strong>uma única população</strong>, um ponto (r_E, r_I) só. Mas V1, o córtex visual primário, não é um ponto: são milhões de colunas corticais repetindo essa mesma dinâmica local, lado a lado, cobrindo milímetros de tecido.</p>
+
+      <p>A pergunta natural é: e se, em vez de um Wilson-Cowan, tivéssemos uma fileira de N cópias independentes, cada uma recebendo seu próprio I_ext? Cada ponto ainda obedeceria exatamente as mesmas equações — e o mesmo diagrama de bifurcação da seção anterior — só que agora cada um vive seu próprio regime, isoladamente, sem saber o que acontece ao lado.</p>
+
+      <!-- SIM_05 -->
+      <div class="sim-card reveal">
+        <div class="sim-header">
+          <div class="sim-dot"></div>
+          <span class="sim-title">sim_06 — gradeDesacoplada.js</span>
+          <span class="sim-badge">interativo</span>
+        </div>
+        <div class="sim-body">
+          <div class="canvas-wrap" style="height:200px;">
+            <canvas id="gradeCanvas" style="height:200px;" role="img" aria-label="Grade de populações Wilson-Cowan independentes, cada uma com seu próprio input externo"></canvas>
+          </div>
+          <p class="sim-caption">Cada barra é um Wilson-Cowan independente — mesmas equações, I_ext diferente, zero comunicação entre vizinhos. Teal = oscilando · cinza = repouso (I&lt;0.57) · vermelho = saturada (I&gt;3.30).</p>
+          <div class="sim-controls">
+            <div class="ctrl-group">
+              <div class="ctrl-label">Gradiente de I_ext (0.2 → <span id="gradRangeVal">3.8</span>)</div>
+              <input type="range" id="gradRangeSlider" min="0.5" max="4.0" step="0.1" value="3.8">
+            </div>
+            <div class="ctrl-group">
+              <div class="ctrl-label">Nº de colunas <span id="gradNVal">14</span></div>
+              <input type="range" id="gradNSlider" min="6" max="24" step="1" value="14">
+            </div>
+          </div>
+          <div class="sim-stat">
+            <div class="stat-item"><span class="stat-l">Colunas oscilando</span><span class="stat-v" id="gradNOsc">—</span></div>
+            <div class="stat-item"><span class="stat-l">Colunas em repouso</span><span class="stat-v" id="gradNRest">—</span></div>
+            <div class="stat-item"><span class="stat-l">Colunas saturadas</span><span class="stat-v" id="gradNSat">—</span></div>
+          </div>
+        </div>
+      </div>
+
+      <p>Repare no resultado: vizinhos completamente dessincronizados — um pode estar berrando num ciclo limite enquanto o ao lado está em silêncio total, separados por uma fração de milímetro. Isso não é o que vemos no córtex real. Falta uma peça: a comunicação lateral entre colunas vizinhas.</p>
+
+      <div class="aside">
+        <span class="aside-icon">🧩</span>
+        <div class="aside-title">A peça que falta já está com a gente desde o Módulo 01</div>
+        <p>É exatamente aí que entra o termo D∇²A que carregamos desde o Movimento Browniano: no Módulo 04, vamos religar esses pontos, deixando a atividade "vazar" de um pra outro via difusão — a mesma equação de Fourier e Einstein, agora espalhando <em>r_E</em> e <em>r_I</em> pelo tecido cortical em vez de calor ou probabilidade. O Laplaciano que implementamos no Módulo 02 é literalmente a ferramenta que vai suavizar essas transições bruscas entre colunas vizinhas.</p>
+      </div>
+
+      <p>Tem uma segunda pergunta em aberto: de onde vem o I_ext de cada ponto? Numa simulação abstrata, é só um parâmetro que giramos num slider. No córtex visual de verdade, cada coluna cortical recebe I_ext vindo de um pedacinho específico do campo visual — essa correspondência tem nome.</p>
+
+      <div class="aside">
+        <span class="aside-icon">👁️</span>
+        <div class="aside-title">Retinotopia — o mapa que o córtex desenha da retina</div>
+        <p>Cada neurônio de V1 responde principalmente a estímulos vindos de uma pequena região do campo visual — seu "campo receptivo". Neurônios vizinhos na retina projetam para neurônios vizinhos no córtex, formando um mapa contínuo: a <strong>retinotopia</strong>.</p>
+        <p>Esse mapa não é uniforme: a região central da visão (a fóvea) ocupa uma fatia desproporcionalmente grande do córtex — a <strong>magnificação cortical</strong>. Quanto mais periférico o campo visual, menos território cortical ele recebe, numa relação aproximadamente logarítmica. É essa geometria, invertida, que vamos usar no Módulo 04 para entender por que um colapso que começa no centro do córtex aparece, na percepção, como um túnel se fechando a partir das bordas do campo visual.</p>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- ── 06 — IMPLEMENTAÇÃO ── -->
     <section class="section reveal">
       <span class="section-anchor" id="implementacao"></span>
-      <div class="section-label">05 — Do Conceito ao Código</div>
+      <div class="section-label">06 — Do Conceito ao Código</div>
       <h2>Implementação em Python</h2>
 
       <div class="code-block">
@@ -663,7 +793,7 @@
 
     <hr class="divider">
 
-    <!-- ── 06 — PONTE COLAB ── -->
+    <!-- ── 07 — PONTE COLAB ── -->
     <section class="section reveal">
       <span class="section-anchor" id="notebook"></span>
       <div class="notebook-bridge">
@@ -675,6 +805,7 @@
           <div class="bridge-feature">Simulação temporal E-I com RK4</div>
           <div class="bridge-feature">Plano de fase com nullclines e campo vetorial</div>
           <div class="bridge-feature">Diagrama de bifurcação completo</div>
+          <div class="bridge-feature">Grade de populações independentes</div>
           <div class="bridge-feature">Widget interativo com sliders (ipywidgets)</div>
           <div class="bridge-feature">Exercícios: bifurcação de Hopf e biestabilidade</div>
         </div>
@@ -694,7 +825,7 @@
     <!-- ── 07 — ROADMAP ── -->
     <section class="section reveal">
       <span class="section-anchor" id="roadmap"></span>
-      <div class="section-label">07 — Roteiro do Curso</div>
+      <div class="section-label">08 — Roteiro do Curso</div>
       <h2>A Jornada: Micro → Campo</h2>
       <p>A difusão é o fio condutor. Veja como ela aparece em cada módulo até chegarmos à simulação completa do córtex visual.</p>
 
@@ -720,7 +851,7 @@
           <tr class="current">
             <td><span class="mod-badge active">03 — Atual</span></td>
             <td><strong>Modelos de População</strong><br>Wilson-Cowan · Dinâmica E-I · Estabilidade</td>
-            <td>Ausente — dinâmica temporal local sem extensão espacial (preparação para o Módulo 04)</td>
+            <td>Ausente — grade de pontos desacoplados, aguardando o D∇²A e o mapa retinotópico do Módulo 04</td>
           </tr>
           <tr>
             <td><span class="mod-badge">04</span></td>
