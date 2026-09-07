@@ -1,8 +1,136 @@
 // sims-wilson-cowan.js
 // Todas as simulações são IIFEs para evitar poluição do escopo global.
-// Ordem: SIM_01 → SIM_02 → SIM_03 → SIM_04
+// Ordem: SIM_01 → SIM_02 → SIM_03 → SIM_04 → SIM_05 → SIM_06
 
-// ── SIM_01 — Curva F-I (estática, sem rAF) ──────────────────────────────────
+// ── SIM_01 — Sigmoide Pura (estática, sem rAF) ──────────────────────────────
+(function () {
+  const canvas = document.getElementById('sigmoidePuraCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const cssStyle = getComputedStyle(document.documentElement);
+  const COLOR_TEAL   = cssStyle.getPropertyValue('--teal').trim();
+  const COLOR_DIM    = cssStyle.getPropertyValue('--text-dim').trim();
+  const COLOR_BORDER = cssStyle.getPropertyValue('--border').trim();
+
+  let a = 1.2;
+  let theta = 2.8;
+
+  function F(I) {
+    // sigmoide crua parametrizada — sem nenhuma correção de resíduo
+    return 1 / (1 + Math.exp(-a * (I - theta)));
+  }
+
+  function resize() {
+    canvas.width  = canvas.offsetWidth  * devicePixelRatio;
+    canvas.height = canvas.offsetHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+  }
+
+  function draw() {
+    const w = canvas.offsetWidth;
+    const h = canvas.offsetHeight;
+    ctx.clearRect(0, 0, w, h);
+
+    const I_MIN = -2, I_MAX = 10;
+    const Y_MIN = -0.08, Y_MAX = 1.05;
+    const PAD = { left: 42, right: 16, top: 16, bottom: 32 };
+    const pw = w - PAD.left - PAD.right;
+    const ph = h - PAD.top  - PAD.bottom;
+
+    const toX = (I) => PAD.left + (I - I_MIN) / (I_MAX - I_MIN) * pw;
+    const toY = (v) => PAD.top  + (1 - (v - Y_MIN) / (Y_MAX - Y_MIN)) * ph;
+
+    // grid
+    ctx.strokeStyle = COLOR_BORDER;
+    ctx.lineWidth = 1;
+    for (let v = 0; v <= 1; v += 0.25) {
+      ctx.beginPath();
+      ctx.moveTo(PAD.left, toY(v));
+      ctx.lineTo(PAD.left + pw, toY(v));
+      ctx.stroke();
+    }
+
+    // axes
+    ctx.strokeStyle = 'rgba(232,228,220,0.3)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(toX(0), PAD.top); ctx.lineTo(toX(0), PAD.top + ph); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(PAD.left, toY(0)); ctx.lineTo(PAD.left + pw, toY(0)); ctx.stroke();
+
+    // threshold dashed line
+    ctx.strokeStyle = 'rgba(232,228,220,0.35)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(toX(theta), PAD.top); ctx.lineTo(toX(theta), PAD.top + ph); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.fillStyle = COLOR_DIM;
+    ctx.font = '10px IBM Plex Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('θ', toX(theta), PAD.top + ph + 20);
+
+    ctx.textAlign = 'right';
+    for (let v = 0; v <= 1; v += 0.25) {
+      ctx.fillText(v.toFixed(2), PAD.left - 6, toY(v) + 4);
+    }
+    ctx.textAlign = 'center';
+    for (let I = 0; I <= 10; I += 2) {
+      ctx.fillText(I, toX(I), PAD.top + ph + 20);
+    }
+
+    // curva crua
+    ctx.beginPath();
+    ctx.strokeStyle = COLOR_TEAL;
+    ctx.lineWidth = 2.5;
+    let first = true;
+    for (let ix = 0; ix <= pw; ix++) {
+      const I = I_MIN + (ix / pw) * (I_MAX - I_MIN);
+      const v = F(I);
+      const px = PAD.left + ix;
+      const py = toY(v);
+      if (first) { ctx.moveTo(px, py); first = false; } else { ctx.lineTo(px, py); }
+    }
+    ctx.stroke();
+
+    // marcador em I=0, evidenciando que não é zero
+    const y0 = F(0);
+    const mx = toX(0), my = toY(y0);
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = 'rgba(224,92,92,0.5)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(PAD.left, my); ctx.lineTo(mx, my); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.arc(mx, my, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#e05c5c';
+    ctx.fill();
+
+    document.getElementById('spAtZero').textContent  = y0.toFixed(4);
+    document.getElementById('spAtTheta').textContent = F(theta).toFixed(4);
+  }
+
+  resize();
+  draw();
+  window.addEventListener('resize', () => { resize(); draw(); });
+
+  const gainSlider  = document.getElementById('spGainSlider');
+  const thetaSlider = document.getElementById('spThetaSlider');
+
+  gainSlider.addEventListener('input', () => {
+    a = parseFloat(gainSlider.value);
+    document.getElementById('spGainVal').textContent = a.toFixed(2);
+    draw();
+  });
+
+  thetaSlider.addEventListener('input', () => {
+    theta = parseFloat(thetaSlider.value);
+    document.getElementById('spThetaVal').textContent = theta.toFixed(2);
+    draw();
+  });
+})();
+
+
+// ── SIM_02 — Curva F-I Corrigida (estática, sem rAF) ────────────────────────
 (function () {
   const canvas = document.getElementById('curvaFICanvas');
   if (!canvas) return;
@@ -138,7 +266,7 @@
 })();
 
 
-// ── SIM_02 — Wilson-Cowan Temporal (rAF + RK4) ──────────────────────────────
+// ── SIM_03 — Wilson-Cowan Temporal (rAF + RK4) ──────────────────────────────
 (function () {
   const canvas = document.getElementById('wcTemporalCanvas');
   if (!canvas) return;
@@ -348,7 +476,7 @@
 })();
 
 
-// ── SIM_03 — Plano de Fase (rAF + campo vetorial + nullclines) ───────────────
+// ── SIM_04 — Plano de Fase (rAF + campo vetorial + nullclines) ───────────────
 (function () {
   const canvas = document.getElementById('planoDeFaseCanvas');
   if (!canvas) return;
@@ -684,7 +812,7 @@
 })();
 
 
-// ── SIM_04 — Diagrama de Bifurcação (setTimeout, não bloqueia UI) ────────────
+// ── SIM_05 — Diagrama de Bifurcação (setTimeout, não bloqueia UI) ────────────
 (function () {
   const canvas = document.getElementById('bifurcacaoCanvas');
   if (!canvas) return;
@@ -909,5 +1037,136 @@
     document.getElementById('bifPt1').textContent = '—';
     document.getElementById('bifPt2').textContent = '—';
     setTimeout(processNext, 0);
+  });
+})();
+
+
+// ── SIM_06 — Grade Desacoplada (N Wilson-Cowan independentes, rAF + RK4) ────
+(function () {
+  const canvas = document.getElementById('gradeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  // mesmos parâmetros do diagrama de bifurcação (SIM_04), inclusive wII=3.0,
+  // para que os limiares 0.57 e 3.30 usados na classificação sigam válidos
+  const PARAMS = {
+    tauE: 1.0, tauI: 2.0,
+    aE: 1.2, thE: 2.8,
+    aI: 1.0, thI: 4.0,
+    wEE: 9.0, wEI: 8.0,
+    wIE: 10.0, wII: 3.0,
+    Ii: 0.0
+  };
+  const DT = 0.05;
+  const STEPS_PER_FRAME = 4;
+  const IE_MIN = 0.2;
+  const BIF_LOW = 0.57, BIF_HIGH = 3.30;
+
+  let N = 14;
+  let ieMax = 3.8;
+  let columns = [];
+
+  function sigmoid(I, a, th) {
+    return 1 / (1 + Math.exp(-a * (I - th))) - 1 / (1 + Math.exp(a * th));
+  }
+
+  function derivs(re, ri, Ie) {
+    const IE = PARAMS.wEE * re - PARAMS.wEI * ri + Ie;
+    const II = PARAMS.wIE * re - PARAMS.wII * ri + PARAMS.Ii;
+    return {
+      e: (-re + sigmoid(IE, PARAMS.aE, PARAMS.thE)) / PARAMS.tauE,
+      i: (-ri + sigmoid(II, PARAMS.aI, PARAMS.thI)) / PARAMS.tauI
+    };
+  }
+
+  function rk4Step(re, ri, Ie) {
+    const k1 = derivs(re,               ri,               Ie);
+    const k2 = derivs(re + DT/2 * k1.e, ri + DT/2 * k1.i, Ie);
+    const k3 = derivs(re + DT/2 * k2.e, ri + DT/2 * k2.i, Ie);
+    const k4 = derivs(re + DT   * k3.e, ri + DT   * k3.i, Ie);
+    return {
+      e: Math.max(0, Math.min(1, re + (DT/6) * (k1.e + 2*k2.e + 2*k3.e + k4.e))),
+      i: Math.max(0, Math.min(1, ri + (DT/6) * (k1.i + 2*k2.i + 2*k3.i + k4.i)))
+    };
+  }
+
+  function classify(Ie) {
+    if (Ie < BIF_LOW) return 'repouso';
+    if (Ie > BIF_HIGH) return 'saturada';
+    return 'oscilando';
+  }
+
+  function initColumns() {
+    columns = Array.from({ length: N }, (_, idx) => {
+      const Ie = N > 1 ? IE_MIN + (idx / (N - 1)) * (ieMax - IE_MIN) : IE_MIN;
+      return { Ie, rE: 0.1, rI: 0.1 };
+    });
+    updateStats();
+  }
+
+  function updateStats() {
+    let nOsc = 0, nRest = 0, nSat = 0;
+    columns.forEach((c) => {
+      const cls = classify(c.Ie);
+      if (cls === 'oscilando') nOsc++;
+      else if (cls === 'repouso') nRest++;
+      else nSat++;
+    });
+    document.getElementById('gradNOsc').textContent = nOsc;
+    document.getElementById('gradNRest').textContent = nRest;
+    document.getElementById('gradNSat').textContent = nSat;
+  }
+
+  function resize() {
+    canvas.width  = canvas.offsetWidth  * devicePixelRatio;
+    canvas.height = canvas.offsetHeight * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+  }
+
+  function draw() {
+    const w = canvas.offsetWidth, h = canvas.offsetHeight;
+    ctx.clearRect(0, 0, w, h);
+
+    const gap = 3;
+    const barW = (w - gap * (N - 1)) / N;
+
+    columns.forEach((c, idx) => {
+      const x = idx * (barW + gap);
+      const barH = Math.max(2, c.rE * (h - 10));
+      const cls = classify(c.Ie);
+      const color = cls === 'oscilando' ? '#4ecdc4'
+                  : cls === 'saturada'  ? '#e05c5c'
+                  : 'rgba(232,228,220,0.35)';
+      ctx.fillStyle = color;
+      ctx.fillRect(x, h - barH, barW, barH);
+    });
+  }
+
+  function loop() {
+    for (let s = 0; s < STEPS_PER_FRAME; s++) {
+      columns.forEach((c) => {
+        const next = rk4Step(c.rE, c.rI, c.Ie);
+        c.rE = next.e; c.rI = next.i;
+      });
+    }
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  initColumns();
+  resize();
+  window.addEventListener('resize', () => { resize(); draw(); });
+  loop();
+
+  document.getElementById('gradRangeSlider').addEventListener('input', function () {
+    ieMax = parseFloat(this.value);
+    document.getElementById('gradRangeVal').textContent = ieMax.toFixed(1);
+    initColumns();
+  });
+
+  document.getElementById('gradNSlider').addEventListener('input', function () {
+    N = parseInt(this.value);
+    document.getElementById('gradNVal').textContent = N;
+    initColumns();
   });
 })();

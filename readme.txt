@@ -1,7 +1,7 @@
 Teste# Luz no Fim do Túnel
 ### Neurociência Computacional — Simulação Computacional do Córtex Visual
 
-> Uma série de módulos didáticos que conduz do movimento browniano à simulação do córtex visual primário em isquemia — modelando os fenômenos perceptuais observados em experiências de quase-morte.
+> Uma série de módulos didáticos que conduz do movimento browniano à simulação do córtex visual primário em isquemia — construindo as ferramentas para investigar se essa simulação consegue reproduzir os fenômenos perceptuais relatados em experiências de quase-morte.
 
 **Autores:** Ester Chilaver & Victor Gomes  
 **Hospedagem:** GitHub Pages  
